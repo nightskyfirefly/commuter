@@ -113,48 +113,27 @@ export function convertEPAtoVehicle(epaVehicle: EPAVehicle): Vehicle {
 }
 
 /**
- * Fetch vehicle makes from NHTSA vPIC API
- * Queries multiple vehicle types to capture all automotive manufacturers
- * (cars, trucks, SUVs, etc.) including brands like Rivian, Tesla Cybertruck
+ * Fetch vehicle makes - returns curated list of popular manufacturers
+ * This ensures a clean, user-friendly list without obscure or non-automotive brands
  */
 export async function fetchVehicleMakes(): Promise<
   { id: number; name: string }[]
 > {
-  try {
-    // Query multiple vehicle types to capture all automotive manufacturers
-    const vehicleTypes = [
-      'car',
-      'truck', 
-      'multipurpose passenger vehicle',
-      'passenger car'
-    ];
-    
-    const fetchPromises = vehicleTypes.map(type =>
-      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/${encodeURIComponent(type)}?format=json`, 
-        { cache: "force-cache" })
-        .then(res => res.ok ? res.json() : { Results: [] })
-        .catch(() => ({ Results: [] }))
-    );
-    
-    const responses = await Promise.all(fetchPromises);
-    
-    // Merge all results, deduplicate by MakeId
-    const uniqueMakes = new Map<number, string>();
-    responses.forEach(data => {
-      data.Results?.forEach((make: any) => {
-        if (make.MakeId && make.MakeName) {
-          uniqueMakes.set(make.MakeId, make.MakeName);
-        }
-      });
-    });
-    
-    return Array.from(uniqueMakes.entries())
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  } catch (error) {
-    console.error("Error fetching vehicle makes:", error);
-    return [];
-  }
+  // Curated list of popular automotive manufacturers
+  // IDs are not critical here since we query by name in subsequent API calls
+  const popularMakes = [
+    { id: 1, name: "BMW" },
+    { id: 2, name: "Ford" },
+    { id: 3, name: "Honda" },
+    { id: 4, name: "Jeep" },
+    { id: 5, name: "Rivian" },
+    { id: 6, name: "Subaru" },
+    { id: 7, name: "Tesla" },
+    { id: 8, name: "Toyota" },
+    { id: 9, name: "Volkswagen" },
+  ];
+
+  return popularMakes;
 }
 
 /**
