@@ -114,32 +114,40 @@ export function convertEPAtoVehicle(epaVehicle: EPAVehicle): Vehicle {
 
 /**
  * Fetch vehicle makes from NHTSA vPIC API
- * Only returns makes for passenger vehicles (cars, trucks, SUVs, motorcycles)
+ * Queries multiple vehicle types to capture all automotive manufacturers
+ * (cars, trucks, SUVs, etc.) including brands like Rivian, Tesla Cybertruck
  */
 export async function fetchVehicleMakes(): Promise<
   { id: number; name: string }[]
 > {
   try {
-    // Use GetMakesForVehicleType endpoint to filter passenger vehicles only
-    const response = await fetch(
-      "https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json",
-      { cache: "force-cache" } // Cache makes list
+    // Query multiple vehicle types to capture all automotive manufacturers
+    const vehicleTypes = [
+      'car',
+      'truck', 
+      'multipurpose passenger vehicle',
+      'passenger car'
+    ];
+    
+    const fetchPromises = vehicleTypes.map(type =>
+      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/${encodeURIComponent(type)}?format=json`, 
+        { cache: "force-cache" })
+        .then(res => res.ok ? res.json() : { Results: [] })
+        .catch(() => ({ Results: [] }))
     );
-
-    if (!response.ok) {
-      throw new Error(`NHTSA API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Remove duplicates and sort
+    
+    const responses = await Promise.all(fetchPromises);
+    
+    // Merge all results, deduplicate by MakeId
     const uniqueMakes = new Map<number, string>();
-    data.Results.forEach((make: any) => {
-      if (make.MakeId && make.MakeName) {
-        uniqueMakes.set(make.MakeId, make.MakeName);
-      }
+    responses.forEach(data => {
+      data.Results?.forEach((make: any) => {
+        if (make.MakeId && make.MakeName) {
+          uniqueMakes.set(make.MakeId, make.MakeName);
+        }
+      });
     });
-
+    
     return Array.from(uniqueMakes.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
