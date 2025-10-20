@@ -9,7 +9,7 @@ import {
   fetchEpaOptions,
   fetchEpaVehicle,
   fetchEpaModels,
-  fetchVpicModels,
+  fetchVehicleModels,
   fetchCarQueryWeight,
   convertEPAtoBase75,
   determineVehicleType,
@@ -109,7 +109,7 @@ async function handleYearMakeModelLookup(
   // If still no results, try vPIC models as fallback
   if (epaOptions.length === 0) {
     console.log("EPA failed, trying vPIC models");
-    const vpicModels = await fetchVpicModels(make, year);
+    const vpicModels = await fetchVehicleModels(make, year);
     
     for (const vpicModel of vpicModels.slice(0, 5)) { // Limit to first 5 to avoid rate limits
       const testOptions = await fetchEpaOptions(year, make, vpicModel);

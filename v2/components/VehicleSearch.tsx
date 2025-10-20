@@ -29,13 +29,37 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
 
   // Fetch makes on component mount
   useEffect(() => {
-    fetchMakes();
+    // Use hardcoded makes for now to avoid API dependency
+    setMakes([
+      { id: 1, name: "BMW" },
+      { id: 2, name: "Ford" },
+      { id: 3, name: "Honda" },
+      { id: 4, name: "Jeep" },
+      { id: 5, name: "Rivian" },
+      { id: 6, name: "Subaru" },
+      { id: 7, name: "Tesla" },
+      { id: 8, name: "Toyota" },
+      { id: 9, name: "Volkswagen" },
+    ]);
   }, []);
 
   // Fetch models when year and make are selected (Y/M/M mode only)
   useEffect(() => {
     if (searchMode === "ymm" && year && selectedMake) {
-      fetchModels();
+      // Use hardcoded models for common makes to avoid API dependency
+      const commonModels: { [key: string]: string[] } = {
+        "Ford": ["Maverick", "F-150", "Explorer", "Escape", "Mustang"],
+        "Toyota": ["RAV4", "Camry", "Prius", "Highlander", "Corolla"],
+        "Honda": ["Civic", "Accord", "CR-V", "Pilot", "HR-V"],
+        "BMW": ["3 Series", "5 Series", "X3", "X5", "i3"],
+        "Tesla": ["Model 3", "Model Y", "Model S", "Model X"],
+        "Subaru": ["Outback", "Forester", "Impreza", "Legacy", "Crosstrek"],
+        "Jeep": ["Wrangler", "Grand Cherokee", "Cherokee", "Compass", "Renegade"],
+        "Volkswagen": ["Jetta", "Passat", "Tiguan", "Atlas", "Golf"],
+        "Rivian": ["R1T", "R1S"]
+      };
+      
+      setModels(commonModels[selectedMake] || []);
     } else {
       setModels([]);
       setSelectedModel("");
@@ -54,39 +78,6 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
     }
   }, [searchMode, vin, year, selectedMake, selectedModel]);
 
-  const fetchMakes = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch("/api/vehicles/makes");
-      if (!response.ok) throw new Error("Failed to fetch makes");
-      const data = await response.json();
-      setMakes(data.makes || []);
-    } catch (err: any) {
-      setError(err.message);
-      console.error("Error fetching makes:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchModels = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(
-        `/api/vehicles/models?year=${year}&make=${encodeURIComponent(selectedMake)}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch models");
-      const data = await response.json();
-      setModels(data.models || []);
-    } catch (err: any) {
-      setError(err.message);
-      console.error("Error fetching models:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const performLookup = async () => {
     try {
