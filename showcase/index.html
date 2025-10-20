@@ -543,8 +543,13 @@
             `;
         }
 
-        // Try to load the app after a short delay
-        setTimeout(loadApp, 1000);
+        // Load the app when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadApp);
+        } else {
+            // DOM already loaded
+            loadApp();
+        }
     </script>
 </body>
 </html>
