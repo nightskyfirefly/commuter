@@ -9,14 +9,11 @@ interface VehicleSearchProps {
 }
 
 export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle" }: VehicleSearchProps) {
-  const [searchMode, setSearchMode] = useState<"vin" | "ymm">("ymm");
-  const [vin, setVin] = useState<string>("");
   const [year, setYear] = useState<string>("");
   const [makes, setMakes] = useState<{ id: number; name: string }[]>([]);
   const [selectedMake, setSelectedMake] = useState<string>("");
   const [models, setModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
-  const [query, setQuery] = useState<string>("");
   const [lookupResult, setLookupResult] = useState<VehicleLookupResponse | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<string>("");
   const [customWeight, setCustomWeight] = useState<string>("");
@@ -43,9 +40,9 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
     ]);
   }, []);
 
-  // Fetch models when year and make are selected (Y/M/M mode only)
+  // Fetch models when year and make are selected
   useEffect(() => {
-    if (searchMode === "ymm" && year && selectedMake) {
+    if (year && selectedMake) {
       // Use hardcoded models for common makes to avoid API dependency
       const commonModels: { [key: string]: string[] } = {
         "Ford": ["Maverick", "F-150", "Explorer", "Escape", "Mustang"],
@@ -64,19 +61,17 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
       setModels([]);
       setSelectedModel("");
     }
-  }, [year, selectedMake, searchMode]);
+  }, [year, selectedMake]);
 
-  // Perform lookup when all required fields are filled
+  // Perform lookup when year, make, and model are selected
   useEffect(() => {
-    if (searchMode === "vin" && vin.length === 17) {
-      performLookup();
-    } else if (searchMode === "ymm" && year && selectedMake && selectedModel) {
+    if (year && selectedMake && selectedModel) {
       performLookup();
     } else {
       setLookupResult(null);
       setSelectedCandidate("");
     }
-  }, [searchMode, vin, year, selectedMake, selectedModel]);
+  }, [year, selectedMake, selectedModel]);
 
 
   const performLookup = async () => {
@@ -84,23 +79,19 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
       setLoading(true);
       setError(null);
       
-      let url = "/api/vehicle-lookup?";
-      if (searchMode === "vin") {
-        url += `vin=${encodeURIComponent(vin)}`;
-      } else {
-        url += `year=${year}&make=${encodeURIComponent(selectedMake)}&model=${encodeURIComponent(selectedModel)}`;
-        if (query) {
-          url += `&query=${encodeURIComponent(query)}`;
-        }
-      }
+      const url = `/api/vehicle-lookup?year=${year}&make=${encodeURIComponent(selectedMake)}&model=${encodeURIComponent(selectedModel)}`;
 
+      console.log("Testing URL:", url);
       const response = await fetch(url);
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to lookup vehicle");
       }
       
       const data: VehicleLookupResponse = await response.json();
+      console.log("Response data:", data);
       setLookupResult(data);
       
       // Auto-select first candidate
@@ -144,85 +135,27 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
         {label}
       </label>
 
-      {/* Search Mode Toggle */}
-      <div className="flex space-x-2">
-        <button
-          type="button"
-          className={`px-3 py-1 text-xs uppercase tracking-wider ${
-            searchMode === "ymm" 
-              ? "bg-pink-500 text-white" 
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          }`}
-          onClick={() => {
-            setSearchMode("ymm");
-            setVin("");
-            setLookupResult(null);
-          }}
-        >
-          Year/Make/Model
-        </button>
-        <button
-          type="button"
-          className={`px-3 py-1 text-xs uppercase tracking-wider ${
-            searchMode === "vin" 
-              ? "bg-pink-500 text-white" 
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          }`}
-          onClick={() => {
-            setSearchMode("vin");
-            setYear("");
+      {/* Year Selector */}
+      <div>
+        <label className="text-xs text-gray-400 uppercase tracking-wider">Year</label>
+        <select
+          className="cyber-select w-full mt-1"
+          value={year}
+          onChange={(e) => {
+            setYear(e.target.value);
             setSelectedMake("");
             setSelectedModel("");
-            setLookupResult(null);
           }}
+          disabled={loading}
         >
-          VIN
-        </button>
+          <option value="">Select Year</option>
+          {years.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
       </div>
-
-      {/* VIN Input */}
-      {searchMode === "vin" && (
-        <div>
-          <label className="text-xs text-gray-400 uppercase tracking-wider">VIN (17 characters)</label>
-          <input
-            type="text"
-            className="cyber-input w-full mt-1"
-            value={vin}
-            onChange={(e) => setVin(e.target.value.toUpperCase())}
-            placeholder="Enter 17-character VIN"
-            maxLength={17}
-            disabled={loading}
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            {vin.length}/17 characters
-          </p>
-        </div>
-      )}
-
-      {/* Year/Make/Model Inputs */}
-      {searchMode === "ymm" && (
-        <>
-          {/* Year Selector */}
-          <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider">Year</label>
-            <select
-              className="cyber-select w-full mt-1"
-              value={year}
-              onChange={(e) => {
-                setYear(e.target.value);
-                setSelectedMake("");
-                setSelectedModel("");
-              }}
-              disabled={loading}
-            >
-              <option value="">Select Year</option>
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
 
       {/* Make Selector */}
       <div>
@@ -263,25 +196,6 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
         </select>
       </div>
 
-          {/* Free-text Query Input */}
-          <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider">
-              Additional Details (Optional)
-            </label>
-            <input
-              type="text"
-              className="cyber-input w-full mt-1"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g., 'hybrid awd xle'"
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Helps find specific trims and configurations
-            </p>
-          </div>
-        </>
-      )}
 
       {/* Vehicle Candidates */}
       {lookupResult && lookupResult.candidates.length > 0 && (
