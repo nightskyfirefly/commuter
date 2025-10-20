@@ -2,13 +2,14 @@
 
 ## ⚡ Quick Start for Future AI Agents
 
-**Current Status:** ✅ Fully functional application running on Next.js 15.5.6
+**Current Status:** ✅ V1 fully functional, ⚠️ V2 vehicle search partially working
 
 ### Critical Information
 - **Framework:** Next.js 15.5.6 (App Router)
 - **Node Version Required:** 18.x or higher
 - **Key Dependencies:** React 18.3.1, TypeScript, Tailwind CSS, Recharts
 - **⚠️ IMPORTANT:** Never downgrade to Next.js 14.0.0 - it has critical middleware manifest bugs
+- **🚨 V2 ISSUE:** EPA vehicle lookup returning "no vehicles found" - needs debugging
 
 ### Quick Commands
 ```bash
@@ -593,6 +594,99 @@ This technical documentation should be updated whenever significant changes are 
 
 ---
 
-**Last Updated**: Initial creation - 2024-12-19
-**Version**: 1.0.0
+## V2 Vehicle Search Implementation (December 2024)
+
+### Overview
+V2 is an enhanced version located in the `v2/` directory that adds dynamic vehicle search capabilities using external APIs instead of the static vehicle list in V1.
+
+### Architecture
+
+```
+v2/
+├── app/
+│   ├── api/vehicles/
+│   │   ├── makes/route.ts      # GET /api/vehicles/makes - Curated manufacturer list
+│   │   ├── models/route.ts     # GET /api/vehicles/models - NHTSA model lookup
+│   │   └── lookup/route.ts     # GET /api/vehicles/lookup - EPA vehicle data
+│   ├── globals.css             # Aurora theme styles
+│   ├── layout.tsx              # Root layout
+│   └── page.tsx                # Main page with VehicleSearch integration
+├── components/
+│   ├── VehicleSearch.tsx       # Year/Make/Model selection component
+│   ├── CommuteFormV2.tsx       # Enhanced form with vehicle search
+│   └── ElevationChart.tsx      # Aurora-themed chart component
+├── lib/
+│   ├── vehicleLookup.ts        # NHTSA & EPA API integration
+│   ├── types.ts                # Extended Vehicle interface
+│   └── [other lib files]       # Same as V1
+└── package.json                # Same dependencies as V1
+```
+
+### API Integration Flow
+
+1. **Makes**: Curated list of 9 manufacturers (no API call)
+2. **Models**: NHTSA vPIC API - `GetModelsForMakeYear/make/{make}/modelyear/{year}`
+3. **Vehicle Data**: EPA FuelEconomy.gov API - `vehicle/menu/options?year={year}&make={make}&model={model}`
+
+### Current Status: PARTIALLY WORKING
+
+#### ✅ Working Components
+- Makes dropdown shows 9 curated manufacturers
+- Models dropdown fetches from NHTSA API successfully
+- UI flow: Year → Make → Model → Vehicle selection
+- Aurora theme styling and animations
+
+#### ❌ Critical Issue: EPA Vehicle Lookup Failure
+**Problem**: EPA API returning "No vehicles found matching the criteria" for most searches
+
+**Affected Searches**: Even common vehicles like 2024 Toyota Camry fail
+
+**Investigation Required**:
+1. **Direct API Test**: `https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=2024&make=Toyota&model=Camry`
+2. **Response Format**: Check if EPA API response structure has changed
+3. **Rate Limiting**: Verify if EPA API requires authentication or has usage limits
+4. **Data Availability**: Confirm if vehicles exist in EPA database
+
+**Debugging Steps**:
+```bash
+# Test EPA API directly
+curl "https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=2024&make=Toyota&model=Camry"
+
+# Check browser dev tools for API responses
+# Verify fetchEPAVehicles() function in v2/lib/vehicleLookup.ts
+# Test convertEPAtoVehicle() function parsing
+```
+
+### Key Files for V2 Debugging
+
+**Primary Investigation Target**: `v2/lib/vehicleLookup.ts`
+- Lines 194-244: `fetchEPAVehicles()` function
+- Lines 82-113: `convertEPAtoVehicle()` function
+- Lines 250-285: `fetchCarQueryWeight()` function (fallback)
+
+**API Routes**:
+- `v2/app/api/vehicles/lookup/route.ts` - Main EPA lookup endpoint
+- `v2/app/api/vehicles/models/route.ts` - NHTSA models endpoint
+
+**UI Component**:
+- `v2/components/VehicleSearch.tsx` - Search interface
+
+### Potential Solutions
+
+1. **EPA API Format Change**: Update response parsing in `convertEPAtoVehicle()`
+2. **Alternative Data Source**: Implement NHTSA-only vehicle data as fallback
+3. **API Authentication**: Add required headers or authentication to EPA requests
+4. **Caching Issues**: Check if EPA API responses are being cached incorrectly
+
+### Next Steps for Resolution
+
+1. **Immediate**: Test EPA API directly to verify current response format
+2. **Short-term**: Update parsing logic if API format changed
+3. **Fallback**: Implement NHTSA-only vehicle data if EPA unavailable
+4. **Long-term**: Add more manufacturers to curated list once core functionality works
+
+---
+
+**Last Updated**: December 2024 - Added V2 vehicle search documentation
+**Version**: 1.0.0 (V1), V2 in development
 **Maintainer**: AI Assistant

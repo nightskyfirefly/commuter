@@ -247,4 +247,59 @@ This project was developed with a focus on learning and documenting what works w
 - **Hybrid Vehicle Modeling**: Includes regenerative braking efficiency for realistic comparisons
 - **Chunked API Requests**: Processes elevation data in batches to respect API limits
 
+## V2 Vehicle Search Implementation (December 2024)
+
+### Current Status: PARTIALLY WORKING
+
+The V2 version includes a dynamic vehicle search feature that allows users to search for vehicles by year/make/model instead of using the static vehicle list. However, there are known issues that need resolution.
+
+### Implementation Details
+
+**Location**: `v2/` directory contains the enhanced version with vehicle search capabilities.
+
+**Architecture**:
+- `v2/lib/vehicleLookup.ts` - Vehicle API integration logic
+- `v2/app/api/vehicles/makes/route.ts` - Makes endpoint
+- `v2/app/api/vehicles/models/route.ts` - Models endpoint  
+- `v2/app/api/vehicles/lookup/route.ts` - EPA vehicle lookup endpoint
+- `v2/components/VehicleSearch.tsx` - Search UI component
+
+**Current Implementation**:
+1. **Makes List**: Curated list of 9 popular manufacturers (BMW, Ford, Honda, Jeep, Rivian, Subaru, Tesla, Toyota, Volkswagen)
+2. **Models**: Fetched from NHTSA vPIC API using year + make
+3. **Vehicle Data**: Fetched from EPA FuelEconomy.gov API using year + make + model
+
+### Known Issues Requiring Resolution
+
+**CRITICAL**: The EPA vehicle lookup is returning "No vehicles found matching the criteria" for most searches, even for common vehicles like 2024 Toyota Camry.
+
+**Investigation Needed**:
+1. **EPA API Format**: The EPA FuelEconomy.gov API endpoint may have changed format or require different parameters
+2. **API Response Parsing**: The response parsing logic in `fetchEPAVehicles()` may not match current API structure
+3. **Rate Limiting**: EPA API may have rate limits or require authentication
+4. **Data Availability**: Some vehicles may not be in EPA database (e.g., very new models, discontinued models)
+
+**Debugging Steps for Next Agent**:
+1. Test EPA API directly: `https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=2024&make=Toyota&model=Camry`
+2. Check API response format in browser dev tools
+3. Verify the `convertEPAtoVehicle()` function matches current API structure
+4. Test with different years/makes/models to identify patterns
+5. Consider fallback to NHTSA-only data if EPA continues to fail
+
+### Working Components
+
+✅ **Makes Dropdown**: Shows curated list of 9 manufacturers  
+✅ **Models Dropdown**: Fetches and displays models from NHTSA API  
+✅ **UI Flow**: Year → Make → Model → Vehicle selection works  
+❌ **EPA Data**: Vehicle lookup fails with "no vehicles found"  
+❌ **Final Selection**: Cannot complete vehicle selection due to EPA failure
+
+### Next Steps
+
+The vehicle search feature is 80% complete but blocked by EPA API integration issues. Priority should be:
+1. Debug and fix EPA API integration
+2. Implement fallback data source if EPA unavailable
+3. Test with various vehicle combinations
+4. Consider adding more manufacturers to curated list once core functionality works
+
 For detailed technical insights and development guidelines, see [TECHNICAL_DOCS.md](./TECHNICAL_DOCS.md).
