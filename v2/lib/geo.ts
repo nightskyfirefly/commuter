@@ -21,7 +21,7 @@ export async function geocodeORS(query: string): Promise<[number, number] | null
   
   const f = j?.features?.[0];
   if (f) {
-    const coords = [f.geometry.coordinates[0], f.geometry.coordinates[1]]; // [lon, lat]
+    const coords: [number, number] = [f.geometry.coordinates[0], f.geometry.coordinates[1]]; // [lon, lat]
     console.log(`Geocoding result: ${coords}`);
     return coords;
   }

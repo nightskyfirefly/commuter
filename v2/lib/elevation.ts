@@ -127,9 +127,11 @@ export async function sampleOpenElevation(points: [number, number][]) {
           // Convert fallback format to primary format
           j.results = j.elevations.map((elev: number) => ({ elevation: elev }));
           
-        } catch (fallbackError) {
+        } catch (fallbackError: any) {
           console.error('Both elevation APIs failed:', { primaryError, fallbackError });
-          throw new Error(`All elevation APIs failed. Primary: ${primaryError.message}, Fallback: ${fallbackError.message}`);
+          const primaryMsg = primaryError instanceof Error ? primaryError.message : String(primaryError);
+          const fallbackMsg = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+          throw new Error(`All elevation APIs failed. Primary: ${primaryMsg}, Fallback: ${fallbackMsg}`);
         }
       }
       

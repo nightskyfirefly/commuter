@@ -1,7 +1,6 @@
 // =============================
 // File: lib/vehicleLookup.ts
 // Utility functions for vehicle API lookups and MPG conversion
-"use server";
 
 import type { Vehicle, VehicleKind, EPAVehicle } from "./types";
 
@@ -160,7 +159,7 @@ export async function fetchVehicleModels(
 
     const data = await response.json();
 
-    const models = data.Results.map((model: any) => model.Model_Name).filter(
+    const models: string[] = data.Results.map((model: any) => model.Model_Name).filter(
       (name: string) => name && name.trim().length > 0
     );
 
