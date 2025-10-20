@@ -2,63 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cybernetic Theme Variables */
+/* Aurora Theme Variables - Northern Lights Inspired */
 :root {
-  --cyber-primary: #00ffff;
-  --cyber-secondary: #ff00ff;
-  --cyber-accent: #8b5cf6;
-  --cyber-bg-dark: #000000;
-  --cyber-bg-darker: #000000;
-  --cyber-surface: #0f0f0f;
-  --cyber-surface-light: #1a1a1a;
-  --cyber-text: #ffffff;
-  --cyber-text-muted: #666666;
-  --cyber-border: #222222;
-  --cyber-glow: rgba(0, 255, 255, 0.3);
+  --aurora-pink: #ff6ec7;
+  --aurora-blue: #4d9fff;
+  --aurora-purple: #b794f6;
+  --aurora-teal: #5ce1e6;
+  --aurora-green: #7fffd4;
+  --aurora-lavender: #e8b4f7;
+  --bg-dark: #0a0a0f;
+  --bg-darker: #05050a;
+  --surface: #131318;
+  --surface-light: #1a1a24;
+  --text: #f5f5ff;
+  --text-muted: #8a8a9a;
+  --border: #2a2a38;
+  --glow-pink: rgba(255, 110, 199, 0.3);
+  --glow-blue: rgba(77, 159, 255, 0.3);
+  --glow-teal: rgba(92, 225, 230, 0.3);
 }
 
 /* Base Styles */
 body {
-  background: linear-gradient(135deg, var(--cyber-bg-darker) 0%, var(--cyber-bg-dark) 100%);
-  color: var(--cyber-text);
+  background: radial-gradient(ellipse at top, var(--bg-dark) 0%, var(--bg-darker) 100%);
+  color: var(--text);
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
-/* Cybernetic Animations */
-@keyframes cyber-glow {
-  0%, 100% { box-shadow: 0 0 5px var(--cyber-glow); }
-  50% { box-shadow: 0 0 20px var(--cyber-glow), 0 0 30px var(--cyber-glow); }
+/* Aurora Animations - Soft, flowing like northern lights */
+@keyframes aurora-glow {
+  0%, 100% { box-shadow: 0 0 10px var(--glow-pink), 0 0 20px var(--glow-blue); }
+  33% { box-shadow: 0 0 15px var(--glow-teal), 0 0 25px var(--glow-pink); }
+  66% { box-shadow: 0 0 15px var(--glow-blue), 0 0 25px var(--glow-teal); }
 }
 
-@keyframes cyber-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+@keyframes aurora-pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.6; }
 }
 
-@keyframes cyber-scan {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+@keyframes aurora-wave {
+  0% { transform: translateX(-100%) translateY(0); }
+  50% { transform: translateX(50%) translateY(-10px); }
+  100% { transform: translateX(100%) translateY(0); }
 }
 
-@keyframes data-flow {
+@keyframes aurora-shimmer {
   0% { transform: translateY(-100%); opacity: 0; }
-  50% { opacity: 1; }
+  50% { opacity: 0.8; }
   100% { transform: translateY(100%); opacity: 0; }
 }
 
-/* Custom Components */
+/* Custom Components - Aurora Theme */
 .cyber-card {
-  background: var(--cyber-surface);
-  border: 1px solid var(--cyber-border);
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .cyber-card:hover {
-  border-color: var(--cyber-primary);
-  box-shadow: 0 0 20px var(--cyber-glow);
+  border-color: var(--aurora-blue);
+  box-shadow: 0 0 20px var(--glow-blue), 0 0 30px var(--glow-pink);
   transform: translateY(-2px);
 }
 
@@ -68,28 +75,29 @@ body {
   top: 0;
   left: -100%;
   width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--cyber-primary), transparent);
-  animation: cyber-scan 3s infinite;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--aurora-pink), var(--aurora-teal), transparent);
+  animation: aurora-wave 4s infinite;
 }
 
 .cyber-button {
-  background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 100%);
-  color: var(--cyber-bg-dark);
+  background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-blue) 50%, var(--aurora-purple) 100%);
+  color: var(--text);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 12px 24px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s ease;
+  letter-spacing: 1.5px;
+  transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
 }
 
 .cyber-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
+  box-shadow: 0 10px 30px var(--glow-pink), 0 10px 40px var(--glow-blue);
+  filter: brightness(1.2);
 }
 
 .cyber-button::before {
@@ -99,71 +107,72 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  animation: cyber-scan 2s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: aurora-wave 3s infinite;
 }
 
 .cyber-input {
-  background: var(--cyber-surface);
-  border: 1px solid var(--cyber-border);
-  color: var(--cyber-text);
-  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
   padding: 12px 16px;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .cyber-input:focus {
-  border-color: var(--cyber-primary);
-  box-shadow: 0 0 10px var(--cyber-glow);
+  border-color: var(--aurora-teal);
+  box-shadow: 0 0 15px var(--glow-teal), 0 0 25px var(--glow-blue);
   outline: none;
 }
 
 .cyber-input::placeholder {
-  color: var(--cyber-text-muted);
+  color: var(--text-muted);
 }
 
 .cyber-select {
-  background: var(--cyber-surface);
-  border: 1px solid var(--cyber-border);
-  color: var(--cyber-text);
-  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
   padding: 12px 16px;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .cyber-select:focus {
-  border-color: var(--cyber-primary);
-  box-shadow: 0 0 10px var(--cyber-glow);
+  border-color: var(--aurora-purple);
+  box-shadow: 0 0 15px var(--glow-pink), 0 0 25px var(--glow-blue);
   outline: none;
 }
 
 .cyber-label {
-  color: var(--cyber-primary);
+  color: var(--aurora-lavender);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   font-size: 0.875rem;
 }
 
 .cyber-title {
-  background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 50%, var(--cyber-accent) 100%);
+  background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-teal) 50%, var(--aurora-purple) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2px;
+  animation: aurora-pulse 3s ease-in-out infinite;
 }
 
 .cyber-grid {
   background-image: 
-    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
+    linear-gradient(rgba(255, 110, 199, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77, 159, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
 }
 
 .cyber-glow-text {
-  text-shadow: 0 0 10px var(--cyber-primary);
+  text-shadow: 0 0 15px var(--aurora-pink), 0 0 25px var(--aurora-blue);
 }
 
 .cyber-data-flow {
@@ -178,16 +187,17 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
-  animation: data-flow 4s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 110, 199, 0.1), rgba(92, 225, 230, 0.1), transparent);
+  animation: aurora-shimmer 5s infinite;
 }
 
-/* Loading Animation */
+/* Loading Animation - Aurora themed */
 .cyber-loader {
   width: 40px;
   height: 40px;
-  border: 2px solid var(--cyber-border);
-  border-top: 2px solid var(--cyber-primary);
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--aurora-pink);
+  border-right: 3px solid var(--aurora-teal);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -197,23 +207,26 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* Chart Styling */
+/* Chart Styling - Aurora Theme */
 .recharts-cartesian-axis-tick-value {
-  fill: var(--cyber-text-muted) !important;
+  fill: var(--text-muted) !important;
 }
 
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: var(--cyber-border) !important;
+  stroke: var(--border) !important;
+  opacity: 0.3;
 }
 
 .recharts-line {
-  stroke: var(--cyber-primary) !important;
-  stroke-width: 2px !important;
+  stroke: var(--aurora-teal) !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 8px var(--glow-teal));
 }
 
 .recharts-dot {
-  fill: var(--cyber-primary) !important;
+  fill: var(--aurora-pink) !important;
+  filter: drop-shadow(0 0 6px var(--glow-pink));
 }
 
 /* Responsive Design */

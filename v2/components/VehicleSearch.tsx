@@ -218,7 +218,7 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
       {selectedVehicle && (
         <div className="cyber-card p-4 space-y-2">
           <div className="text-sm">
-            <div className="text-cyan-400 font-semibold mb-2">{selectedVehicle.name}</div>
+            <div className="text-pink-400 font-semibold mb-2">{selectedVehicle.name}</div>
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
               <div>
                 <span className="text-gray-500">City MPG:</span> {selectedVehicle.cityMpg}

@@ -2,6 +2,8 @@
 
 > **⚡ Enhanced Version with Real-Time Vehicle API Integration**
 
+> **🔐 Security Note**: API keys are stored in environment variables. See [ENV_SETUP.md](../ENV_SETUP.md) for configuration instructions.
+
 ## 🆕 What's Different in V2?
 
 This is Version 2 of the Commute Cost Calculator, featuring **dynamic vehicle lookup** capabilities:

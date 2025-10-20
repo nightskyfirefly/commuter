@@ -97,7 +97,7 @@ export function CommuteFormV2(props: {
             <button
               type="button"
               onClick={() => setShowCurrentSearch(!showCurrentSearch)}
-              className="text-xs text-cyan-400 hover:text-cyan-300 uppercase tracking-wider"
+              className="text-xs text-pink-400 hover:text-purple-300 uppercase tracking-wider"
             >
               {showCurrentSearch ? "Hide Search" : "Search Vehicle"}
             </button>
@@ -125,7 +125,7 @@ export function CommuteFormV2(props: {
             <button
               type="button"
               onClick={() => setShowNewSearch(!showNewSearch)}
-              className="text-xs text-cyan-400 hover:text-cyan-300 uppercase tracking-wider"
+              className="text-xs text-pink-400 hover:text-purple-300 uppercase tracking-wider"
             >
               {showNewSearch ? "Hide Search" : "Search Vehicle"}
             </button>
@@ -208,7 +208,7 @@ export function CommuteFormV2(props: {
         </div>
         <div className="cyber-card p-3 mt-4">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL</div>
-          <div className="text-xl font-bold text-cyan-400">
+          <div className="text-xl font-bold text-purple-400">
             {((values.speedShares.s65 + values.speedShares.s70 + values.speedShares.s75) * 100).toFixed(0)}%
           </div>
           {(values.speedShares.s65 + values.speedShares.s70 + values.speedShares.s75) !== 1 && (

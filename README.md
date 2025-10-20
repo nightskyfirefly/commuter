@@ -2,6 +2,8 @@
 
 A Next.js application that calculates fuel costs and ROI for vehicle upgrades with elevation-aware calculations.
 
+> **🔐 Security Note**: API keys are stored in environment variables. See [ENV_SETUP.md](./ENV_SETUP.md) for configuration instructions.
+
 ## Features
 
 - **Elevation-aware fuel calculations**: Takes into account hills and elevation changes
@@ -39,12 +41,22 @@ The application follows a clean separation of concerns:
 
 ## Getting Started
 
-1. Install dependencies:
+### 1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Run the development server:
+### 2. Configure Environment Variables:
+
+Create a `.env.local` file in the project root:
+```bash
+# .env.local
+ORS_API_KEY=your_api_key_here
+```
+
+**See [ENV_SETUP.md](./ENV_SETUP.md) for detailed setup instructions and the actual API key.**
+
+### 3. Run the development server:
 ```bash
 npm run dev
 ```

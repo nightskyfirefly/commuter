@@ -76,7 +76,7 @@ export default function Page() {
           <p className="text-lg text-gray-400 uppercase tracking-wider">
             ELEVATION-AWARE FUEL OPTIMIZATION SYSTEM
           </p>
-          <div className="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+          <div className="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
         </div>
 
         <div className="cyber-card p-6 space-y-6">
