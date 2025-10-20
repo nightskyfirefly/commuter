@@ -248,7 +248,7 @@
                     <div class="text-center py-12">
                         <div class="cyber-loader mx-auto mb-4"></div>
                         <p class="text-gray-400 uppercase tracking-wider">INITIALIZING SYSTEM...</p>
-                        <p class="text-sm text-gray-500 mt-2">If the app doesn't load, make sure the Next.js development server is running on localhost:3000</p>
+                        <p class="text-sm text-gray-500 mt-2">Live production app hosted on Vercel</p>
                     </div>
                 </div>
             </div>
@@ -367,7 +367,7 @@
             // Try to load the iframe directly
             container.innerHTML = `
                 <iframe 
-                    src="http://localhost:3000" 
+                    src="https://commuter-e2zp.vercel.app" 
                     width="100%" 
                     height="800" 
                     frameborder="0"
@@ -400,7 +400,7 @@
                 <div class="text-center py-12">
                     <i data-lucide="alert-circle" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
                     <h3 class="text-xl font-semibold mb-2">App Not Available</h3>
-                    <p class="text-gray-600 mb-4">The Commute Cost Calculator is not currently running on localhost:3000.</p>
+                    <p class="text-gray-600 mb-4">Unable to load the Commute Cost Calculator from Vercel.</p>
                     <div class="bg-gray-100 p-6 rounded-lg text-left max-w-md mx-auto mb-6">
                         <p class="text-sm font-semibold mb-3">To run the app:</p>
                         <ol class="text-sm text-gray-600 space-y-2">

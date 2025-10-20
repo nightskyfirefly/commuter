@@ -114,13 +114,15 @@ export function convertEPAtoVehicle(epaVehicle: EPAVehicle): Vehicle {
 
 /**
  * Fetch vehicle makes from NHTSA vPIC API
+ * Only returns makes for passenger vehicles (cars, trucks, SUVs, motorcycles)
  */
 export async function fetchVehicleMakes(): Promise<
   { id: number; name: string }[]
 > {
   try {
+    // Use GetMakesForVehicleType endpoint to filter passenger vehicles only
     const response = await fetch(
-      "https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json",
+      "https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json",
       { cache: "force-cache" } // Cache makes list
     );
 
@@ -130,10 +132,17 @@ export async function fetchVehicleMakes(): Promise<
 
     const data = await response.json();
 
-    return data.Results.map((make: any) => ({
-      id: make.Make_ID,
-      name: make.Make_Name,
-    })).sort((a: any, b: any) => a.name.localeCompare(b.name));
+    // Remove duplicates and sort
+    const uniqueMakes = new Map<number, string>();
+    data.Results.forEach((make: any) => {
+      if (make.MakeId && make.MakeName) {
+        uniqueMakes.set(make.MakeId, make.MakeName);
+      }
+    });
+
+    return Array.from(uniqueMakes.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error("Error fetching vehicle makes:", error);
     return [];

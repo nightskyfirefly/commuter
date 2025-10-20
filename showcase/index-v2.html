@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commute Cost Calculator V2 - Interactive Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --aurora-pink: #ff6ec7;
+            --aurora-blue: #4d9fff;
+            --aurora-purple: #b794f6;
+            --aurora-teal: #5ce1e6;
+            --bg-dark: #0a0a0f;
+            --bg-darker: #05050a;
+            --surface: #131318;
+            --text: #f5f5ff;
+            --text-muted: #8a8a9a;
+            --border: #2a2a38;
+            --glow-pink: rgba(255, 110, 199, 0.3);
+            --glow-blue: rgba(77, 159, 255, 0.3);
+        }
+
+        body {
+            background: radial-gradient(ellipse at top, var(--bg-dark) 0%, var(--bg-darker) 100%);
+            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        .aurora-grid {
+            background-image: 
+                linear-gradient(rgba(255, 110, 199, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(77, 159, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .aurora-title {
+            background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-blue) 50%, var(--aurora-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: aurora-glow 3s ease-in-out infinite;
+        }
+
+        .aurora-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .aurora-card:hover {
+            border-color: var(--aurora-pink);
+            box-shadow: 0 0 30px var(--glow-pink);
+            transform: translateY(-8px);
+        }
+
+        .aurora-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--aurora-pink), var(--aurora-teal), transparent);
+            animation: aurora-wave 4s infinite;
+        }
+
+        .aurora-button {
+            background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-purple) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px var(--glow-pink);
+        }
+
+        .aurora-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px var(--glow-pink);
+        }
+
+        .aurora-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: aurora-shimmer 2.5s infinite;
+        }
+
+        .aurora-badge {
+            background: linear-gradient(135deg, var(--aurora-teal), var(--aurora-blue));
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            box-shadow: 0 4px 15px var(--glow-blue);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--aurora-pink), var(--aurora-purple));
+            box-shadow: 0 8px 25px var(--glow-pink);
+        }
+
+        .aurora-glow-text {
+            color: var(--aurora-pink);
+            text-shadow: 0 0 20px var(--glow-pink);
+        }
+
+        .aurora-loader {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--aurora-pink);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes aurora-glow {
+            0%, 100% { filter: drop-shadow(0 0 20px var(--glow-pink)); }
+            50% { filter: drop-shadow(0 0 30px var(--glow-blue)); }
+        }
+
+        @keyframes aurora-wave {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes aurora-shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes aurora-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .new-badge {
+            background: linear-gradient(135deg, #ff6ec7, #ff9a44);
+            animation: aurora-pulse 2s ease-in-out infinite;
+        }
+
+        iframe {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(255, 110, 199, 0.2);
+        }
+    </style>
+</head>
+<body class="aurora-grid">
+    <!-- Hero Section -->
+    <div class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center">
+                <div class="mb-4">
+                    <span class="aurora-badge new-badge">✨ NEW: V2 WITH VEHICLE SEARCH</span>
+                </div>
+                <h1 class="aurora-title text-5xl font-bold mb-6">COMMUTE COST ANALYZER V2</h1>
+                <p class="text-xl mb-4 opacity-90 text-gray-300 uppercase tracking-wider">REAL-TIME VEHICLE DATABASE INTEGRATION</p>
+                <p class="text-base text-gray-400 max-w-2xl mx-auto mb-8">Search ANY vehicle from 1990-present using official EPA & NHTSA APIs for accurate MPG data</p>
+                <div class="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
+                <div class="flex justify-center space-x-4 mt-8">
+                    <button onclick="scrollToDemo()" class="aurora-button">
+                        TRY V2 NOW
+                    </button>
+                    <button onclick="scrollToFeatures()" class="border-2 border-pink-400 text-pink-400 px-8 py-3 rounded-lg font-semibold hover:bg-pink-400 hover:text-white transition-colors uppercase tracking-wider">
+                        WHAT'S NEW
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- What's New Section -->
+    <div id="features" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="aurora-title text-4xl font-bold mb-4">NEW IN V2</h2>
+                <p class="text-xl text-gray-400 uppercase tracking-wider">Enhanced with live vehicle database lookup</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="aurora-card p-8">
+                    <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
+                        <i data-lucide="search" class="text-white w-8 h-8"></i>
+                    </div>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">VEHICLE SEARCH</h3>
+                    <p class="text-gray-400">Search any vehicle by year/make/model from 1990-present. No more manual entry!</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="aurora-card p-8">
+                    <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
+                        <i data-lucide="database" class="text-white w-8 h-8"></i>
+                    </div>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">OFFICIAL EPA DATA</h3>
+                    <p class="text-gray-400">Real MPG ratings from FuelEconomy.gov - city, highway, and combined figures.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="aurora-card p-8">
+                    <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
+                        <i data-lucide="shield-check" class="text-white w-8 h-8"></i>
+                    </div>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">NHTSA VERIFIED</h3>
+                    <p class="text-gray-400">Vehicle identification through official National Highway Traffic Safety Administration API.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="aurora-card p-8">
+                    <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
+                        <i data-lucide="gauge" class="text-white w-8 h-8"></i>
+                    </div>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">AUTO-DETECT HYBRIDS</h3>
+                    <p class="text-gray-400">Automatically identifies hybrid vehicles and applies appropriate efficiency models.</p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="aurora-card p-8">
+                    <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
+                        <i data-lucide="sliders" class="text-white w-8 h-8"></i>
+                    </div>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">CUSTOM OVERRIDES</h3>
+                    <p class="text-gray-400">Manual weight adjustments and custom vehicle configurations still supported.</p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="aurora-card p-8">
+                    <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
+                        <i data-lucide="git-branch" class="text-white w-8 h-8"></i>
+                    </div>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">BACKWARDS COMPATIBLE</h3>
+                    <p class="text-gray-400">All original features intact - V1 vehicles still available alongside new search.</p>
+                </div>
+            </div>
+
+            <!-- Legacy Features -->
+            <div class="mt-16 text-center">
+                <h3 class="text-2xl font-bold mb-8 text-purple-400">Plus All V1 Features:</h3>
+                <div class="grid md:grid-cols-4 gap-6">
+                    <div class="aurora-card p-6">
+                        <i data-lucide="mountain" class="w-10 h-10 text-teal-400 mx-auto mb-3"></i>
+                        <p class="text-sm font-semibold text-gray-300">Elevation-Aware</p>
+                    </div>
+                    <div class="aurora-card p-6">
+                        <i data-lucide="thermometer-snowflake" class="w-10 h-10 text-blue-400 mx-auto mb-3"></i>
+                        <p class="text-sm font-semibold text-gray-300">Winter Penalties</p>
+                    </div>
+                    <div class="aurora-card p-6">
+                        <i data-lucide="gauge" class="w-10 h-10 text-pink-400 mx-auto mb-3"></i>
+                        <p class="text-sm font-semibold text-gray-300">Speed Mix Analysis</p>
+                    </div>
+                    <div class="aurora-card p-6">
+                        <i data-lucide="dollar-sign" class="w-10 h-10 text-purple-400 mx-auto mb-3"></i>
+                        <p class="text-sm font-semibold text-gray-300">ROI Calculations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Demo Section -->
+    <div id="demo" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="aurora-title text-4xl font-bold mb-4">LIVE DEMO</h2>
+                <p class="text-xl text-gray-400 uppercase tracking-wider">Try the V2 app now - hosted on Vercel</p>
+            </div>
+            
+            <div class="aurora-card p-6">
+                <!-- App Content -->
+                <div id="app-container" class="p-6">
+                    <div class="text-center py-12">
+                        <div class="aurora-loader mx-auto mb-4"></div>
+                        <p class="text-gray-400 uppercase tracking-wider">LOADING V2 APP...</p>
+                        <p class="text-sm text-gray-500 mt-2">Live production app with vehicle search</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="mt-8 aurora-card p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-lucide="info" class="w-5 h-5 mr-2 text-pink-400"></i>
+                    How to Use Vehicle Search
+                </h3>
+                <ol class="space-y-3 text-gray-300">
+                    <li class="flex items-start">
+                        <span class="bg-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold mr-3 mt-0.5">1</span>
+                        <span>Click "Search Vehicle" button next to Current Vehicle or Upgrade Candidate</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold mr-3 mt-0.5">2</span>
+                        <span>Select Year (1990-2026), then Make (e.g., Ford, Toyota, Honda)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold mr-3 mt-0.5">3</span>
+                        <span>Choose Model - EPA data loads automatically with MPG ratings</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold mr-3 mt-0.5">4</span>
+                        <span>Optionally adjust weight, then click "Use This Vehicle"</span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-400 text-sm uppercase tracking-wider">Commute Cost Calculator V2</p>
+                    <p class="text-gray-600 text-xs mt-1">Enhanced with real-time vehicle database integration</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="https://github.com/nightskyfirefly" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-pink-400 transition-colors">
+                        <i data-lucide="github" class="w-6 h-6"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Smooth scroll function
+        function scrollToDemo() {
+            document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToFeatures() {
+            document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Handle iframe load success
+        function handleIframeLoad() {
+            console.log('V2 app loaded successfully');
+        }
+
+        // Load the app on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('app-container');
+            
+            // Try to load the iframe directly
+            container.innerHTML = `
+                <iframe 
+                    src="https://commuter-e2zp.vercel.app" 
+                    width="100%" 
+                    height="900" 
+                    frameborder="0"
+                    style="border-radius: 12px;"
+                    onload="handleIframeLoad()"
+                    onerror="showNotFound()"
+                ></iframe>
+            `;
+        });
+
+        // Fallback if app not found
+        function showNotFound() {
+            const container = document.getElementById('app-container');
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <i data-lucide="alert-circle" class="w-16 h-16 text-red-400 mx-auto mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">App Temporarily Unavailable</h3>
+                    <p class="text-gray-400 mb-4">Unable to load the V2 app from Vercel.</p>
+                    <a href="https://commuter-e2zp.vercel.app" target="_blank" class="aurora-button inline-block">
+                        Open in New Tab
+                    </a>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
+
