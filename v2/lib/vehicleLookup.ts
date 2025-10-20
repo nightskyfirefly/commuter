@@ -4,6 +4,10 @@
 
 import type { Vehicle, VehicleKind, EPAVehicle } from "./types";
 
+// In-memory cache for EPA menu endpoints
+const epaMenuCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 3600000; // 1 hour
+
 /**
  * Convert EPA highway MPG to our baseline 75mph MPG
  * EPA highway test averages ~48mph, real-world 75mph is typically 10-20% lower
@@ -177,7 +181,7 @@ export async function fetchEPAVehicles(
 ): Promise<Vehicle[]> {
   try {
     const response = await fetch(
-      `https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=${year}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`,
+      `https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=${year}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&format=json`,
       { cache: "no-store" } // Don't cache individual vehicle lookups
     );
 
@@ -201,7 +205,7 @@ export async function fetchEPAVehicles(
     for (const vehicleId of vehicleIds) {
       try {
         const detailResponse = await fetch(
-          `https://www.fueleconomy.gov/ws/rest/vehicle/${vehicleId}`,
+          `https://www.fueleconomy.gov/ws/rest/vehicle/${vehicleId}?format=json`,
           { cache: "no-store" }
         );
 
@@ -258,6 +262,214 @@ export async function fetchCarQueryWeight(
     return null;
   } catch (error) {
     console.error("Error fetching CarQuery weight:", error);
+    return null;
+  }
+}
+
+/**
+ * Normalize make/model string to extract year, make, model and strip tokens
+ */
+export function normalizeMakeModel(str: string): {
+  year?: number;
+  make?: string;
+  model?: string;
+  tokens: string[];
+} {
+  const tokens = str.toLowerCase().split(/\s+/);
+  const result: { year?: number; make?: string; model?: string; tokens: string[] } = {
+    tokens: []
+  };
+
+  // Extract year (4 digits at start)
+  const yearMatch = str.match(/^(\d{4})\s+/);
+  if (yearMatch) {
+    result.year = parseInt(yearMatch[1]);
+    tokens.shift(); // Remove year from tokens
+  }
+
+  // Common tokens to strip
+  const stripTokens = ['hybrid', 'hev', 'phev', 'awd', '4wd', 'fwd', 'xle', 'limited', 'sport', 'se', 'le'];
+  
+  // Filter out strip tokens and collect them
+  const filteredTokens = tokens.filter(token => {
+    if (stripTokens.includes(token)) {
+      result.tokens.push(token);
+      return false;
+    }
+    return true;
+  });
+
+  // First remaining token is likely make, rest is model
+  if (filteredTokens.length >= 2) {
+    result.make = filteredTokens[0];
+    result.model = filteredTokens.slice(1).join(' ');
+  }
+
+  return result;
+}
+
+/**
+ * Strip common model tokens for better EPA matching
+ */
+export function stripModelTokens(model: string): string {
+  const tokens = ['hybrid', 'hev', 'phev', 'awd', '4wd', 'fwd', 'xle', 'limited', 'sport', 'se', 'le'];
+  let stripped = model.toLowerCase();
+  
+  for (const token of tokens) {
+    const regex = new RegExp(`\\b${token}\\b`, 'gi');
+    stripped = stripped.replace(regex, '').trim();
+  }
+  
+  // Clean up extra spaces
+  return stripped.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Calculate Levenshtein distance between two strings
+ */
+export function levenshteinDistance(a: string, b: string): number {
+  const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+  
+  for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+  for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+  
+  for (let j = 1; j <= b.length; j++) {
+    for (let i = 1; i <= a.length; i++) {
+      const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1,     // deletion
+        matrix[j - 1][i] + 1,      // insertion
+        matrix[j - 1][i - 1] + indicator // substitution
+      );
+    }
+  }
+  
+  return matrix[b.length][a.length];
+}
+
+/**
+ * Score candidate match based on token overlap and Levenshtein distance
+ */
+export function scoreCandidate(userQuery: string, optionText: string): number {
+  const userTokens = userQuery.toLowerCase().split(/\s+/);
+  const optionTokens = optionText.toLowerCase().split(/\s+/);
+  
+  // Token overlap score (0-1)
+  const overlap = userTokens.filter(token => optionTokens.includes(token)).length;
+  const tokenScore = overlap / Math.max(userTokens.length, optionTokens.length);
+  
+  // Levenshtein distance score (0-1, higher is better)
+  const maxLen = Math.max(userQuery.length, optionText.length);
+  const levenshteinScore = maxLen > 0 ? 1 - (levenshteinDistance(userQuery, optionText) / maxLen) : 0;
+  
+  // Weighted combination: 60% token overlap, 40% Levenshtein
+  return tokenScore * 0.6 + levenshteinScore * 0.4;
+}
+
+/**
+ * Fetch available models from EPA menu API with caching
+ */
+export async function fetchEpaModels(year: number, make: string): Promise<string[]> {
+  const cacheKey = `models_${year}_${make}`;
+  const cached = epaMenuCache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+
+  try {
+    const response = await fetch(
+      `https://www.fueleconomy.gov/ws/rest/vehicle/menu/model?year=${year}&make=${encodeURIComponent(make)}&format=json`,
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(`EPA models API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const models = data.menuItem?.map((item: any) => item.value) || [];
+    
+    epaMenuCache.set(cacheKey, { data: models, timestamp: Date.now() });
+    return models;
+  } catch (error) {
+    console.error("Error fetching EPA models:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch vehicle options from EPA menu API with caching
+ */
+export async function fetchEpaOptions(year: number, make: string, model: string): Promise<{ text: string; value: string }[]> {
+  const cacheKey = `options_${year}_${make}_${model}`;
+  const cached = epaMenuCache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+
+  try {
+    const response = await fetch(
+      `https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=${year}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&format=json`,
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(`EPA options API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const options = data.menuItem?.map((item: any) => ({ text: item.text, value: item.value })) || [];
+    
+    epaMenuCache.set(cacheKey, { data: options, timestamp: Date.now() });
+    return options;
+  } catch (error) {
+    console.error("Error fetching EPA options:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch detailed vehicle data from EPA
+ */
+export async function fetchEpaVehicle(vehicleId: string): Promise<EPAVehicle | null> {
+  try {
+    const response = await fetch(
+      `https://www.fueleconomy.gov/ws/rest/vehicle/${vehicleId}?format=json`,
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(`EPA vehicle API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error fetching EPA vehicle ${vehicleId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch VIN decode data from vPIC API
+ */
+export async function fetchVpicVinDecode(vin: string): Promise<any> {
+  try {
+    const response = await fetch(
+      `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVINValuesExtended/${vin}?format=json`,
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(`vPIC VIN API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.Results?.[0] || null;
+  } catch (error) {
+    console.error("Error fetching VIN decode:", error);
     return null;
   }
 }

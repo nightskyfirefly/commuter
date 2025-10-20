@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import type { Vehicle } from "@/lib/types";
+import type { Vehicle, VehicleLookupResponse } from "@/lib/types";
 
 interface VehicleSearchProps {
   onVehicleSelect: (vehicle: Vehicle) => void;
@@ -9,13 +9,16 @@ interface VehicleSearchProps {
 }
 
 export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle" }: VehicleSearchProps) {
+  const [searchMode, setSearchMode] = useState<"vin" | "ymm">("ymm");
+  const [vin, setVin] = useState<string>("");
   const [year, setYear] = useState<string>("");
   const [makes, setMakes] = useState<{ id: number; name: string }[]>([]);
   const [selectedMake, setSelectedMake] = useState<string>("");
   const [models, setModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [query, setQuery] = useState<string>("");
+  const [lookupResult, setLookupResult] = useState<VehicleLookupResponse | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<string>("");
   const [customWeight, setCustomWeight] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,25 +32,27 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
     fetchMakes();
   }, []);
 
-  // Fetch models when year and make are selected
+  // Fetch models when year and make are selected (Y/M/M mode only)
   useEffect(() => {
-    if (year && selectedMake) {
+    if (searchMode === "ymm" && year && selectedMake) {
       fetchModels();
     } else {
       setModels([]);
       setSelectedModel("");
     }
-  }, [year, selectedMake]);
+  }, [year, selectedMake, searchMode]);
 
-  // Fetch vehicles when year, make, and model are selected
+  // Perform lookup when all required fields are filled
   useEffect(() => {
-    if (year && selectedMake && selectedModel) {
-      fetchVehicles();
+    if (searchMode === "vin" && vin.length === 17) {
+      performLookup();
+    } else if (searchMode === "ymm" && year && selectedMake && selectedModel) {
+      performLookup();
     } else {
-      setVehicles([]);
-      setSelectedVehicle(null);
+      setLookupResult(null);
+      setSelectedCandidate("");
     }
-  }, [year, selectedMake, selectedModel]);
+  }, [searchMode, vin, year, selectedMake, selectedModel]);
 
   const fetchMakes = async () => {
     try {
@@ -83,46 +88,63 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
     }
   };
 
-  const fetchVehicles = async () => {
+  const performLookup = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(
-        `/api/vehicles/lookup?year=${year}&make=${encodeURIComponent(selectedMake)}&model=${encodeURIComponent(selectedModel)}&includeWeight=true`
-      );
+      
+      let url = "/api/vehicle-lookup?";
+      if (searchMode === "vin") {
+        url += `vin=${encodeURIComponent(vin)}`;
+      } else {
+        url += `year=${year}&make=${encodeURIComponent(selectedMake)}&model=${encodeURIComponent(selectedModel)}`;
+        if (query) {
+          url += `&query=${encodeURIComponent(query)}`;
+        }
+      }
+
+      const response = await fetch(url);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch vehicles");
+        throw new Error(errorData.error || "Failed to lookup vehicle");
       }
-      const data = await response.json();
-      setVehicles(data.vehicles || []);
-      if (data.vehicles && data.vehicles.length > 0) {
-        // Auto-select first vehicle
-        handleVehicleSelection(data.vehicles[0]);
+      
+      const data: VehicleLookupResponse = await response.json();
+      setLookupResult(data);
+      
+      // Auto-select first candidate
+      if (data.candidates.length > 0) {
+        setSelectedCandidate(data.candidates[0].id);
+        setCustomWeight(data.vehicle.massKg?.toString() || "");
       }
     } catch (err: any) {
       setError(err.message);
-      console.error("Error fetching vehicles:", err);
+      console.error("Error performing lookup:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVehicleSelection = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
-    setCustomWeight(vehicle.massKg.toString());
-  };
-
   const handleConfirm = () => {
-    if (!selectedVehicle) return;
+    if (!lookupResult) return;
 
-    // Apply custom weight if provided
-    const finalVehicle = {
-      ...selectedVehicle,
-      massKg: customWeight ? parseFloat(customWeight) : selectedVehicle.massKg,
+    // Convert lookup result to Vehicle format
+    const vehicle: Vehicle = {
+      id: lookupResult.vehicle.id,
+      name: lookupResult.vehicle.name,
+      type: lookupResult.vehicle.type,
+      baseMpg75: lookupResult.vehicle.baseMpg75,
+      massKg: customWeight ? parseFloat(customWeight) : lookupResult.vehicle.massKg || 1600,
+      year: parseInt(year) || undefined,
+      make: selectedMake || undefined,
+      model: selectedModel || undefined,
+      cityMpg: lookupResult.epa.city,
+      highwayMpg: lookupResult.epa.hwy,
+      combinedMpg: lookupResult.epa.comb,
+      source: "epa"
     };
 
-    onVehicleSelect(finalVehicle);
+    onVehicleSelect(vehicle);
   };
 
   return (
@@ -131,27 +153,85 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
         {label}
       </label>
 
-      {/* Year Selector */}
-      <div>
-        <label className="text-xs text-gray-400 uppercase tracking-wider">Year</label>
-        <select
-          className="cyber-select w-full mt-1"
-          value={year}
-          onChange={(e) => {
-            setYear(e.target.value);
+      {/* Search Mode Toggle */}
+      <div className="flex space-x-2">
+        <button
+          type="button"
+          className={`px-3 py-1 text-xs uppercase tracking-wider ${
+            searchMode === "ymm" 
+              ? "bg-pink-500 text-white" 
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+          }`}
+          onClick={() => {
+            setSearchMode("ymm");
+            setVin("");
+            setLookupResult(null);
+          }}
+        >
+          Year/Make/Model
+        </button>
+        <button
+          type="button"
+          className={`px-3 py-1 text-xs uppercase tracking-wider ${
+            searchMode === "vin" 
+              ? "bg-pink-500 text-white" 
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+          }`}
+          onClick={() => {
+            setSearchMode("vin");
+            setYear("");
             setSelectedMake("");
             setSelectedModel("");
+            setLookupResult(null);
           }}
-          disabled={loading}
         >
-          <option value="">Select Year</option>
-          {years.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
+          VIN
+        </button>
       </div>
+
+      {/* VIN Input */}
+      {searchMode === "vin" && (
+        <div>
+          <label className="text-xs text-gray-400 uppercase tracking-wider">VIN (17 characters)</label>
+          <input
+            type="text"
+            className="cyber-input w-full mt-1"
+            value={vin}
+            onChange={(e) => setVin(e.target.value.toUpperCase())}
+            placeholder="Enter 17-character VIN"
+            maxLength={17}
+            disabled={loading}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            {vin.length}/17 characters
+          </p>
+        </div>
+      )}
+
+      {/* Year/Make/Model Inputs */}
+      {searchMode === "ymm" && (
+        <>
+          {/* Year Selector */}
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider">Year</label>
+            <select
+              className="cyber-select w-full mt-1"
+              value={year}
+              onChange={(e) => {
+                setYear(e.target.value);
+                setSelectedMake("");
+                setSelectedModel("");
+              }}
+              disabled={loading}
+            >
+              <option value="">Select Year</option>
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
 
       {/* Make Selector */}
       <div>
@@ -192,22 +272,41 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
         </select>
       </div>
 
-      {/* Vehicle Trim Selector */}
-      {vehicles.length > 0 && (
+          {/* Free-text Query Input */}
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider">
+              Additional Details (Optional)
+            </label>
+            <input
+              type="text"
+              className="cyber-input w-full mt-1"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g., 'hybrid awd xle'"
+              disabled={loading}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Helps find specific trims and configurations
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* Vehicle Candidates */}
+      {lookupResult && lookupResult.candidates.length > 0 && (
         <div>
-          <label className="text-xs text-gray-400 uppercase tracking-wider">Trim / Configuration</label>
+          <label className="text-xs text-gray-400 uppercase tracking-wider">
+            Available Configurations
+          </label>
           <select
             className="cyber-select w-full mt-1"
-            value={selectedVehicle?.id || ""}
-            onChange={(e) => {
-              const vehicle = vehicles.find((v) => v.id === e.target.value);
-              if (vehicle) handleVehicleSelection(vehicle);
-            }}
+            value={selectedCandidate}
+            onChange={(e) => setSelectedCandidate(e.target.value)}
             disabled={loading}
           >
-            {vehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.trim || vehicle.name}
+            {lookupResult.candidates.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.text} (Score: {(candidate.score * 100).toFixed(0)}%)
               </option>
             ))}
           </select>
@@ -215,28 +314,34 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
       )}
 
       {/* Vehicle Details */}
-      {selectedVehicle && (
+      {lookupResult && (
         <div className="cyber-card p-4 space-y-2">
           <div className="text-sm">
-            <div className="text-pink-400 font-semibold mb-2">{selectedVehicle.name}</div>
+            <div className="text-pink-400 font-semibold mb-2">{lookupResult.vehicle.name}</div>
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
               <div>
-                <span className="text-gray-500">City MPG:</span> {selectedVehicle.cityMpg}
+                <span className="text-gray-500">City MPG:</span> {lookupResult.epa.city}
               </div>
               <div>
-                <span className="text-gray-500">Highway MPG:</span> {selectedVehicle.highwayMpg}
+                <span className="text-gray-500">Highway MPG:</span> {lookupResult.epa.hwy}
               </div>
               <div>
-                <span className="text-gray-500">Combined MPG:</span> {selectedVehicle.combinedMpg}
+                <span className="text-gray-500">Combined MPG:</span> {lookupResult.epa.comb}
               </div>
               <div>
-                <span className="text-gray-500">75mph Est:</span> {selectedVehicle.baseMpg75}
+                <span className="text-gray-500">75mph Est:</span> {lookupResult.vehicle.baseMpg75}
               </div>
               <div>
-                <span className="text-gray-500">Type:</span> {selectedVehicle.type.toUpperCase()}
+                <span className="text-gray-500">Type:</span> {lookupResult.vehicle.type.toUpperCase()}
               </div>
               <div>
-                <span className="text-gray-500">Source:</span> {selectedVehicle.source?.toUpperCase()}
+                <span className="text-gray-500">Drive:</span> {lookupResult.epa.drive}
+              </div>
+              <div>
+                <span className="text-gray-500">Transmission:</span> {lookupResult.epa.trany}
+              </div>
+              <div>
+                <span className="text-gray-500">Source:</span> EPA
               </div>
             </div>
           </div>
@@ -251,10 +356,11 @@ export default function VehicleSearch({ onVehicleSelect, label = "Search Vehicle
               className="cyber-input w-full mt-1"
               value={customWeight}
               onChange={(e) => setCustomWeight(e.target.value)}
-              placeholder={`Default: ${selectedVehicle.massKg}kg`}
+              placeholder={`Default: ${lookupResult.vehicle.massKg || 'Unknown'}kg`}
             />
             <p className="text-xs text-gray-500 mt-1">
-              Default: {selectedVehicle.massKg}kg (~{Math.round(selectedVehicle.massKg * 2.20462)} lbs)
+              Default: {lookupResult.vehicle.massKg || 'Unknown'}kg 
+              {lookupResult.vehicle.massKg && ` (~${Math.round(lookupResult.vehicle.massKg * 2.20462)} lbs)`}
             </p>
           </div>
 
