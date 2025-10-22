@@ -1,161 +1,261 @@
-// =============================
-// File: app/page.tsx (client page that calls the server API)
-"use client";
-import React, { useState } from "react";
-import { RefreshCcw } from "lucide-react";
-import { CommuteForm } from "@/components/CommuteForm";
-import { ElevationChart } from "@/components/ElevationChart";
-import { DEFAULT_VEHICLES } from "@/lib/vehicles";
+'use client';
 
-function usd(x: number) { return x.toLocaleString(undefined, { style: "currency", currency: "USD" }); }
+import { useState, useEffect, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import { ChargingStation, StationFilters, StationStats } from '@/lib/types';
+import Sidebar from '@/components/Sidebar';
+import LoadingOverlay from '@/components/LoadingOverlay';
 
-export default function Page() {
-  const [values, setValues] = useState({
-    home: "Quechee, VT",
-    work: "Londonderry, NH",
-    gasPrice: 3.5,
-    daysPerWeek: 3,
-    weeksPerYear: 48,
-    winterFrac: 0.25,
-    winterPen: 0.1,
-    speedShares: { s65: 0, s70: 0, s75: 1 },
-    currentVehicleId: "rav4_2017_awd",
-    newVehicleId: "mav_hybrid_mid",
-    upgradeCost: 20000,
-  });
-  const [loading, setLoading] = useState(false);
+// Dynamically import Plot component to avoid SSR issues
+const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
+
+export default function Dashboard() {
+  const [stations, setStations] = useState<ChargingStation[]>([]);
+  const [filteredStations, setFilteredStations] = useState<ChargingStation[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingStations, setLoadingStations] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<any | null>(null);
+  const [filters, setFilters] = useState<StationFilters>({
+    state: '',
+    access: '',
+    free: ''
+  });
+  const [viewportBounds, setViewportBounds] = useState<{
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  } | null>(null);
+  const plotRef = useRef<any>(null);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  async function run() {
-    setLoading(true); setError(null);
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (viewportBounds) {
+      loadViewportStations();
+    }
+  }, [viewportBounds, filters]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadInitialData = async () => {
     try {
-      const r = await fetch("/api/commute", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j?.error || "Request failed");
-      setData(j);
-    } catch (e: any) {
-      setError(e?.message || "Unknown error");
-    } finally { setLoading(false); }
+      const response = await fetch('/api/stations');
+      if (!response.ok) {
+        throw new Error('Failed to load station data');
+      }
+      const data = await response.json();
+      setStates(data.states);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error loading station data:', err);
+      setError('Failed to load station data');
+      setLoading(false);
+    }
+  };
+
+  const loadViewportStations = useCallback(async () => {
+    if (!viewportBounds) return;
+
+    // Clear any existing timeout
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
+    // Debounce the API call
+    loadingTimeoutRef.current = setTimeout(async () => {
+      setLoadingStations(true);
+      try {
+        const params = new URLSearchParams({
+          north: viewportBounds.north.toString(),
+          south: viewportBounds.south.toString(),
+          east: viewportBounds.east.toString(),
+          west: viewportBounds.west.toString()
+        });
+
+        const response = await fetch(`/api/stations?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to load viewport stations');
+        }
+        const data = await response.json();
+        
+        // Apply filters to the viewport stations
+        const filtered = data.stations.filter((station: ChargingStation) => {
+          const stateMatch = !filters.state || station.state === filters.state;
+          const accessMatch = !filters.access || station.access === filters.access;
+          const freeMatch = !filters.free || station.isFree.toString() === filters.free;
+          
+          return stateMatch && accessMatch && freeMatch;
+        });
+        
+        setFilteredStations(filtered);
+      } catch (err) {
+        console.error('Error loading viewport stations:', err);
+      } finally {
+        setLoadingStations(false);
+      }
+    }, 300); // 300ms debounce
+  }, [viewportBounds, filters]);
+
+  const updateFilters = (newFilters: Partial<StationFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const handlePlotUpdate = (eventData: any) => {
+    if (eventData && eventData.layout && eventData.layout.geo) {
+      const geo = eventData.layout.geo;
+      if (geo.lonaxis && geo.lataxis) {
+        const lonRange = geo.lonaxis.range;
+        const latRange = geo.lataxis.range;
+        
+        if (lonRange && latRange) {
+          setViewportBounds({
+            north: latRange[1],
+            south: latRange[0],
+            east: lonRange[1],
+            west: lonRange[0]
+          });
+        }
+      }
+    }
+  };
+
+  const stats: StationStats = {
+    total: filteredStations.length,
+    public: filteredStations.filter(s => s.access === 'public').length,
+    free: filteredStations.filter(s => s.isFree).length,
+    states: new Set(filteredStations.map(s => s.state)).size
+  };
+
+  const plotData = {
+    type: 'scattergeo' as const,
+    mode: 'markers' as const,
+    lat: filteredStations.map(s => s.lat),
+    lon: filteredStations.map(s => s.lon),
+    text: filteredStations.map(s => s.hover),
+    hoverinfo: 'text' as const,
+    marker: {
+      size: filteredStations.map(s => s.isFree ? 6 : 4),
+      color: filteredStations.map(s => s.isFree ? '#ffd700' : '#ff6b35'),
+      opacity: 0.9,
+      line: {
+        width: 0.5,
+        color: filteredStations.map(s => s.isFree ? '#fff8dc' : '#fff5f0')
+      },
+      // Add luminous glow effect
+      symbol: 'circle' as const,
+      sizemode: 'diameter' as const,
+      sizeref: 1,
+      sizemin: 2,
+      sizemax: 8
+    },
+    name: 'EV Charging Stations'
+  };
+
+  const plotLayout = {
+    geo: {
+      scope: 'usa' as const,
+      projection: {
+        type: 'albers usa' as const
+      },
+      bgcolor: 'rgba(3, 12, 24, 0.8)',
+      showland: true,
+      landcolor: 'rgba(4, 18, 36, 0.8)',
+      showlakes: true,
+      lakecolor: 'rgba(5, 20, 40, 0.8)',
+      showocean: true,
+      oceancolor: 'rgba(3, 12, 24, 0.8)',
+      coastlinecolor: 'rgba(20, 40, 80, 0.8)',
+      subunitcolor: 'rgba(25, 50, 100, 0.8)',
+      countrycolor: 'rgba(25, 50, 100, 0.8)',
+      showframe: false,
+      showcoastlines: true,
+      showcountries: true,
+      showstates: true,
+      lonaxis: {
+        range: [-180, -50] as [number, number]
+      },
+      lataxis: {
+        range: [20, 80] as [number, number]
+      }
+    },
+    paper_bgcolor: 'rgba(3, 12, 24, 0.8)',
+    plot_bgcolor: 'rgba(3, 12, 24, 0.8)',
+    margin: {
+      l: 0,
+      r: 0,
+      t: 0,
+      b: 0
+    },
+    showlegend: false,
+    hovermode: 'closest' as const
+  };
+
+  const plotConfig = {
+    displayModeBar: false,
+    responsive: true,
+    staticPlot: false
+  };
+
+  // Performance optimization: Only render when we have data
+  if (filteredStations.length === 0 && !loadingStations) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-aurora-blue via-aurora-dark to-aurora-darker">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-aurora-accent mb-4">EV Charging Stations</h1>
+          <p className="text-aurora-text">Pan and zoom the map to explore charging stations</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <LoadingOverlay />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-aurora-blue via-aurora-dark to-aurora-darker">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-aurora-accent mb-4">Error Loading Data</h1>
+          <p className="text-aurora-text">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen cyber-grid">
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
-        <div className="text-center py-8">
-          <h1 className="cyber-title text-4xl md:text-5xl mb-4">
-            COMMUTE COST ANALYZER
-          </h1>
-          <p className="text-lg text-gray-400 uppercase tracking-wider">
-            ELEVATION-AWARE FUEL OPTIMIZATION SYSTEM
-          </p>
-          <div className="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
-        </div>
-
-        <div className="cyber-card p-6 space-y-6">
-          <CommuteForm vehicles={DEFAULT_VEHICLES} values={values} onChange={(p)=>setValues(v=>({...v, ...p}))} />
-          <button 
-            onClick={run} 
-            disabled={loading} 
-            className="cyber-button w-full flex items-center justify-center"
-          >
-            {loading ? (
-              <>
-                <div className="cyber-loader mr-3"></div>
-                PROCESSING DATA...
-              </>
-            ) : (
-              <>
-                <RefreshCcw className="w-5 h-5 mr-2"/>
-                INITIATE ANALYSIS
-              </>
-            )}
-          </button>
-          {error && (
-            <div className="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></div>
-                <span className="font-mono text-sm">ERROR: {error}</span>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-aurora-blue via-aurora-dark to-aurora-darker">
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] h-screen">
+        <Sidebar
+          states={states}
+          filters={filters}
+          stats={stats}
+          onFilterChange={updateFilters}
+        />
+        
+        <div className="relative bg-aurora-blue">
+          {loadingStations && (
+            <div className="absolute top-4 right-4 z-10 bg-aurora-sidebar/90 backdrop-blur-sm border border-aurora-border/50 rounded-lg px-3 py-2 flex items-center space-x-2">
+              <div className="w-4 h-4 border-2 border-aurora-accent/30 border-t-aurora-accent rounded-full animate-spin"></div>
+              <span className="text-sm text-aurora-text">Loading stations...</span>
             </div>
           )}
+          <div className="w-full h-full">
+            <Plot
+              ref={plotRef}
+              data={[plotData]}
+              layout={plotLayout}
+              config={plotConfig}
+              style={{ width: '100%', height: '100%' }}
+              className="luminous-map"
+              onUpdate={handlePlotUpdate}
+              onInitialized={handlePlotUpdate}
+            />
+          </div>
         </div>
-
-        {data && (
-          <>
-            <div className="cyber-card p-6">
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="cyber-data-flow p-4 rounded-lg">
-                  <div className="cyber-label mb-3">CURRENT VEHICLE STATUS</div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Annual Fuel Cost:</span>
-                      <span className="cyber-glow-text font-bold text-lg">{usd(data.yearlyCur)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Weekly Cost:</span>
-                      <span className="text-white">{usd(data.weeklyCur)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Per Round Trip:</span>
-                      <span className="text-white">{usd(data.rtCostCur)}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="cyber-data-flow p-4 rounded-lg">
-                  <div className="cyber-label mb-3">UPGRADE CANDIDATE</div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Annual Fuel Cost:</span>
-                      <span className="cyber-glow-text font-bold text-lg">{usd(data.yearlyNew)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Weekly Cost:</span>
-                      <span className="text-white">{usd(data.weeklyNew)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Per Round Trip:</span>
-                      <span className="text-white">{usd(data.rtCostNew)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="cyber-card p-6">
-              <div className="grid sm:grid-cols-3 gap-6 text-center">
-                <div className="cyber-data-flow p-4 rounded-lg">
-                  <div className="cyber-label mb-2">ANNUAL SAVINGS</div>
-                  <div className="cyber-glow-text text-2xl font-bold">{usd(data.savings)}</div>
-                </div>
-                <div className="cyber-data-flow p-4 rounded-lg">
-                  <div className="cyber-label mb-2">ROI PERCENTAGE</div>
-                  <div className="cyber-glow-text text-2xl font-bold">
-                    {data.roi !== null ? (data.roi*100).toFixed(2)+"%" : "—"}
-                  </div>
-                </div>
-                <div className="cyber-data-flow p-4 rounded-lg">
-                  <div className="cyber-label mb-2">PAYBACK PERIOD</div>
-                  <div className="cyber-glow-text text-2xl font-bold">
-                    {data.paybackYears ? data.paybackYears.toFixed(1)+" YRS" : "—"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="cyber-card p-6">
-              <div className="cyber-label mb-4">ELEVATION PROFILE ANALYSIS</div>
-              <div className="bg-black/50 rounded-lg p-4">
-                <ElevationChart data={data.elevation} />
-              </div>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );
