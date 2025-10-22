@@ -199,6 +199,18 @@ export default function Dashboard() {
     staticPlot: false
   };
 
+  // Performance optimization: Only render when we have data
+  if (filteredStations.length === 0 && !loadingStations) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-aurora-blue via-aurora-dark to-aurora-darker">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-aurora-accent mb-4">EV Charging Stations</h1>
+          <p className="text-aurora-text">Pan and zoom the map to explore charging stations</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return <LoadingOverlay />;
   }
