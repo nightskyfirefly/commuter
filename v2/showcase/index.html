@@ -8,55 +8,61 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         :root {
-            --cyber-primary: #00ffff;
-            --cyber-secondary: #ff00ff;
-            --cyber-accent: #8b5cf6;
-            --cyber-bg-dark: #000000;
-            --cyber-bg-darker: #000000;
-            --cyber-surface: #0f0f0f;
-            --cyber-surface-light: #1a1a1a;
-            --cyber-text: #ffffff;
-            --cyber-text-muted: #666666;
-            --cyber-border: #222222;
-            --cyber-glow: rgba(0, 255, 255, 0.3);
+            --aurora-pink: #ff6ec7;
+            --aurora-blue: #4d9fff;
+            --aurora-purple: #b794f6;
+            --aurora-teal: #5ce1e6;
+            --aurora-green: #7fffd4;
+            --aurora-lavender: #e8b4f7;
+            --bg-dark: #0a0a0f;
+            --bg-darker: #05050a;
+            --surface: #131318;
+            --surface-light: #1a1a24;
+            --text: #f5f5ff;
+            --text-muted: #8a8a9a;
+            --border: #2a2a38;
+            --glow-pink: rgba(255, 110, 199, 0.3);
+            --glow-blue: rgba(77, 159, 255, 0.3);
+            --glow-teal: rgba(92, 225, 230, 0.3);
         }
 
         body {
-            background: #0d0d14;
-            color: var(--cyber-text);
+            background: radial-gradient(ellipse at top, var(--bg-dark) 0%, var(--bg-darker) 100%);
+            color: var(--text);
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         }
 
         .cyber-grid {
             background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
+                linear-gradient(rgba(255, 110, 199, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(77, 159, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
 
         .cyber-title {
-            background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 50%, var(--cyber-accent) 100%);
+            background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-teal) 50%, var(--aurora-purple) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
+            animation: aurora-pulse 3s ease-in-out infinite;
         }
 
         .cyber-card {
-            background: var(--cyber-surface);
-            border: 1px solid var(--cyber-border);
-            border-radius: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
 
         .cyber-card:hover {
-            border-color: var(--cyber-primary);
-            box-shadow: 0 0 20px var(--cyber-glow);
-            transform: translateY(-5px);
+            border-color: var(--aurora-blue);
+            box-shadow: 0 0 20px var(--glow-blue), 0 0 30px var(--glow-pink);
+            transform: translateY(-2px);
         }
 
         .cyber-card::before {
@@ -65,28 +71,29 @@
             top: 0;
             left: -100%;
             width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cyber-primary), transparent);
-            animation: cyber-scan 3s infinite;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--aurora-pink), var(--aurora-teal), transparent);
+            animation: aurora-wave 4s infinite;
         }
 
         .cyber-button {
-            background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 100%);
-            color: var(--cyber-bg-dark);
+            background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-blue) 50%, var(--aurora-purple) 100%);
+            color: var(--text);
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 12px 24px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
+            letter-spacing: 1.5px;
+            transition: all 0.4s ease;
             position: relative;
             overflow: hidden;
         }
 
         .cyber-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
+            box-shadow: 0 10px 30px var(--glow-pink), 0 10px 40px var(--glow-blue);
+            filter: brightness(1.2);
         }
 
         .cyber-button::before {
@@ -96,27 +103,39 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            animation: cyber-scan 2s infinite;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: aurora-wave 3s infinite;
         }
 
         .feature-icon {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 100%);
+            background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-teal) 100%);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        @keyframes cyber-scan {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        @keyframes aurora-pulse {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes aurora-wave {
+            0% { transform: translateX(-100%) translateY(0); }
+            50% { transform: translateX(50%) translateY(-10px); }
+            100% { transform: translateX(100%) translateY(0); }
+        }
+
+        @keyframes aurora-shimmer {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(100%); opacity: 0; }
         }
 
         .cyber-glow-text {
-            text-shadow: 0 0 10px var(--cyber-primary);
+            text-shadow: 0 0 15px var(--aurora-pink), 0 0 25px var(--aurora-blue);
         }
 
         .cyber-data-flow {
@@ -131,14 +150,51 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
-            animation: data-flow 4s infinite;
+            background: linear-gradient(90deg, transparent, rgba(255, 110, 199, 0.1), rgba(92, 225, 230, 0.1), transparent);
+            animation: aurora-shimmer 5s infinite;
         }
 
-        @keyframes data-flow {
-            0% { transform: translateY(-100%); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(100%); opacity: 0; }
+        /* Loading Animation - Aurora themed */
+        .cyber-loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--aurora-pink);
+            border-right: 3px solid var(--aurora-teal);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .cyber-input {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 12px 16px;
+            transition: all 0.4s ease;
+        }
+
+        .cyber-input:focus {
+            border-color: var(--aurora-teal);
+            box-shadow: 0 0 15px var(--glow-teal), 0 0 25px var(--glow-blue);
+            outline: none;
+        }
+
+        .cyber-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .cyber-label {
+            color: var(--aurora-lavender);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.875rem;
         }
     </style>
 </head>
@@ -149,12 +205,12 @@
             <div class="text-center">
                 <h1 class="cyber-title text-5xl font-bold mb-6">COMMUTE COST ANALYZER</h1>
                 <p class="text-xl mb-8 opacity-90 text-gray-400 uppercase tracking-wider">ELEVATION-AWARE FUEL OPTIMIZATION SYSTEM</p>
-                <div class="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+                <div class="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
                 <div class="flex justify-center space-x-4 mt-8">
                     <button onclick="scrollToDemo()" class="cyber-button">
                         INITIATE ANALYSIS
                     </button>
-                    <button onclick="scrollToFeatures()" class="border-2 border-cyan-400 text-cyan-400 px-8 py-3 rounded-lg font-semibold hover:bg-cyan-400 hover:text-black transition-colors uppercase tracking-wider">
+                    <button onclick="scrollToFeatures()" class="border-2 border-purple-400 text-purple-400 px-8 py-3 rounded-lg font-semibold hover:bg-purple-400 hover:text-black transition-colors uppercase tracking-wider">
                         SYSTEM SPECS
                     </button>
                 </div>
@@ -238,7 +294,7 @@
 
             <!-- App Embed Container -->
             <div class="cyber-card overflow-hidden">
-                <div class="bg-gradient-to-r from-cyan-400 to-purple-500 p-6">
+                <div class="bg-gradient-to-r from-pink-500 to-purple-500 p-6">
                     <h3 class="cyber-title text-2xl font-bold">COMMUTE COST ANALYZER</h3>
                     <p class="text-gray-200 mt-2 uppercase tracking-wider">Real-time fuel cost analysis with elevation data</p>
                 </div>
@@ -257,20 +313,20 @@
             <div class="mt-12 grid md:grid-cols-2 gap-8">
                 <div class="cyber-card p-8">
                     <h3 class="cyber-glow-text text-xl font-semibold mb-4 flex items-center">
-                        <i data-lucide="map-pin" class="w-5 h-5 mr-2 text-cyan-400"></i>
+                        <i data-lucide="map-pin" class="w-5 h-5 mr-2 text-purple-400"></i>
                         TEST ROUTES
                     </h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><strong class="text-cyan-400">Quechee, VT → Londonderry, NH</strong> - Mountainous route with significant elevation changes</li>
-                        <li><strong class="text-cyan-400">San Francisco, CA → Oakland, CA</strong> - Bay Area commute with hills</li>
-                        <li><strong class="text-cyan-400">Denver, CO → Boulder, CO</strong> - High altitude route with elevation gain</li>
-                        <li><strong class="text-cyan-400">Seattle, WA → Bellevue, WA</strong> - Pacific Northwest terrain</li>
+                        <li><strong class="text-purple-400">Quechee, VT → Londonderry, NH</strong> - Mountainous route with significant elevation changes</li>
+                        <li><strong class="text-purple-400">San Francisco, CA → Oakland, CA</strong> - Bay Area commute with hills</li>
+                        <li><strong class="text-purple-400">Denver, CO → Boulder, CO</strong> - High altitude route with elevation gain</li>
+                        <li><strong class="text-purple-400">Seattle, WA → Bellevue, WA</strong> - Pacific Northwest terrain</li>
                     </ul>
                 </div>
 
                 <div class="cyber-card p-8">
                     <h3 class="cyber-glow-text text-xl font-semibold mb-4 flex items-center">
-                        <i data-lucide="lightbulb" class="w-5 h-5 mr-2 text-cyan-400"></i>
+                        <i data-lucide="lightbulb" class="w-5 h-5 mr-2 text-purple-400"></i>
                         SYSTEM TIPS
                     </h3>
                     <ul class="space-y-2 text-gray-400">
@@ -336,10 +392,10 @@
                 <h3 class="cyber-title text-2xl font-bold mb-4">COMMUTE COST ANALYZER</h3>
                 <p class="text-gray-400 mb-6 uppercase tracking-wider">Elevation-aware fuel cost analysis for smarter vehicle decisions</p>
                 <div class="flex justify-center space-x-6">
-                    <a href="https://github.com/nightskyfirefly" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-cyan-400 transition-colors">
+                    <a href="https://github.com/nightskyfirefly" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-purple-400 transition-colors">
                         <i data-lucide="github" class="w-6 h-6"></i>
                     </a>
-                    <a href="#" class="text-gray-400 hover:text-cyan-400 transition-colors">
+                    <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors">
                         <i data-lucide="external-link" class="w-6 h-6"></i>
                     </a>
                 </div>
@@ -370,8 +426,14 @@
                 // Local development
                 appUrl = 'http://localhost:3000';
             } else {
-                // Production/Vercel deployment - use the actual Vercel URL
-                appUrl = 'https://commuter-e2zp.vercel.app';
+                // Production/Vercel deployment - try to use the same domain first
+                const currentDomain = window.location.origin;
+                appUrl = currentDomain;
+                
+                // If we're on a showcase subdomain or different path, try the main app
+                if (window.location.pathname.includes('showcase') || window.location.hostname.includes('showcase')) {
+                    appUrl = currentDomain.replace('/showcase', '').replace('showcase.', '');
+                }
             }
             
             console.log('Loading app from:', appUrl);
@@ -413,7 +475,16 @@
             
             // Determine the environment for better error messaging
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const appUrl = isLocal ? 'http://localhost:3000' : 'https://commuter-e2zp.vercel.app';
+            let appUrl;
+            if (isLocal) {
+                appUrl = 'http://localhost:3000';
+            } else {
+                const currentDomain = window.location.origin;
+                appUrl = currentDomain;
+                if (window.location.pathname.includes('showcase') || window.location.hostname.includes('showcase')) {
+                    appUrl = currentDomain.replace('/showcase', '').replace('showcase.', '');
+                }
+            }
             
             container.innerHTML = `
                 <div class="text-center py-12">
@@ -482,106 +553,150 @@
                 <div class="space-y-6">
                     <div class="text-center py-8">
                         <h3 class="text-2xl font-bold mb-4">Commute Cost Calculator Demo</h3>
-                        <p class="text-gray-600 mb-6">Here's what the application looks like when running:</p>
+                        <p class="text-gray-400 mb-6">Here's what the application looks like when running:</p>
                     </div>
                     
                     <!-- Mock App Interface -->
-                    <div class="bg-white border rounded-lg p-6 shadow-lg">
-                        <div class="grid md:grid-cols-3 gap-4 mb-6">
-                            <!-- Mock Form -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium">Home</label>
-                                <div class="border rounded px-3 py-2 bg-gray-50">Quechee, VT</div>
-                                <label class="block text-sm font-medium">Work</label>
-                                <div class="border rounded px-3 py-2 bg-gray-50">Londonderry, NH</div>
+                    <div class="cyber-card p-6 space-y-6">
+                        <!-- Mock Form Grid -->
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <!-- Location & Settings -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="cyber-label block mb-2">HOME LOCATION</label>
+                                    <div class="cyber-input">Quechee, VT</div>
+                                </div>
+                                <div>
+                                    <label class="cyber-label block mb-2">WORK LOCATION</label>
+                                    <div class="cyber-input">Londonderry, NH</div>
+                                </div>
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-sm font-medium">Gas price ($/gal)</label>
-                                        <div class="border rounded px-3 py-2 bg-gray-50">$3.50</div>
+                                        <label class="cyber-label block mb-2">GAS PRICE</label>
+                                        <div class="cyber-input">$3.50/gal</div>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium">Days/week</label>
-                                        <div class="border rounded px-3 py-2 bg-gray-50">3</div>
+                                        <label class="cyber-label block mb-2">DAYS/WEEK</label>
+                                        <div class="cyber-input">3</div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium">Current Vehicle</label>
-                                <div class="border rounded px-3 py-2 bg-gray-50">2017 Toyota RAV4 XLE</div>
-                                <label class="block text-sm font-medium">New Vehicle</label>
-                                <div class="border rounded px-3 py-2 bg-gray-50">Ford Maverick Hybrid</div>
+                            <!-- Vehicle Selection -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="cyber-label block mb-2">CURRENT VEHICLE</label>
+                                    <div class="cyber-input">2017 Toyota RAV4 XLE</div>
+                                </div>
+                                <div>
+                                    <label class="cyber-label block mb-2">NEW VEHICLE</label>
+                                    <div class="cyber-input">Ford Maverick Hybrid</div>
+                                </div>
+                                <div>
+                                    <label class="cyber-label block mb-2">UPGRADE COST</label>
+                                    <div class="cyber-input">$20,000</div>
+                                </div>
                             </div>
                             
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium">Speed Distribution</label>
+                            <!-- Speed Distribution -->
+                            <div class="space-y-4">
+                                <label class="cyber-label block mb-2">SPEED DISTRIBUTION</label>
                                 <div class="grid grid-cols-3 gap-2">
                                     <div class="text-center">
-                                        <div class="text-xs">65 mph</div>
-                                        <div class="border rounded px-2 py-1 bg-gray-50">0%</div>
+                                        <div class="text-xs text-gray-400 mb-1">65 mph</div>
+                                        <div class="cyber-input text-center">0%</div>
                                     </div>
                                     <div class="text-center">
-                                        <div class="text-xs">70 mph</div>
-                                        <div class="border rounded px-2 py-1 bg-gray-50">0%</div>
+                                        <div class="text-xs text-gray-400 mb-1">70 mph</div>
+                                        <div class="cyber-input text-center">0%</div>
                                     </div>
                                     <div class="text-center">
-                                        <div class="text-xs">75 mph</div>
-                                        <div class="border rounded px-2 py-1 bg-gray-50">100%</div>
+                                        <div class="text-xs text-gray-400 mb-1">75 mph</div>
+                                        <div class="cyber-input text-center">100%</div>
                                     </div>
+                                </div>
+                                <div>
+                                    <label class="cyber-label block mb-2">WINTER FRACTION</label>
+                                    <div class="cyber-input">25%</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <button class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold mb-6">
-                            Recompute
+                        <button class="cyber-button w-full flex items-center justify-center">
+                            <i data-lucide="refresh-cw" class="w-5 h-5 mr-2"></i>
+                            INITIATE ANALYSIS
                         </button>
                         
                         <!-- Mock Results -->
-                        <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                            <div class="bg-gray-50 p-4 rounded">
-                                <div class="font-medium mb-2">Current Vehicle</div>
-                                <div>Annual fuel: <strong>$1,260</strong></div>
-                                <div>Per week: $26.25</div>
-                                <div>Per round trip: $8.75</div>
+                        <div class="grid sm:grid-cols-2 gap-6">
+                            <div class="cyber-data-flow p-4 rounded-lg">
+                                <div class="cyber-label mb-3">CURRENT VEHICLE STATUS</div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Annual Fuel Cost:</span>
+                                        <span class="cyber-glow-text font-bold text-lg">$1,260</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Weekly Cost:</span>
+                                        <span class="text-white">$26.25</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Per Round Trip:</span>
+                                        <span class="text-white">$8.75</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="bg-gray-50 p-4 rounded">
-                                <div class="font-medium mb-2">New Vehicle</div>
-                                <div>Annual fuel: <strong>$945</strong></div>
-                                <div>Per week: $19.69</div>
-                                <div>Per round trip: $6.56</div>
+                            
+                            <div class="cyber-data-flow p-4 rounded-lg">
+                                <div class="cyber-label mb-3">UPGRADE CANDIDATE</div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Annual Fuel Cost:</span>
+                                        <span class="cyber-glow-text font-bold text-lg">$945</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Weekly Cost:</span>
+                                        <span class="text-white">$19.69</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Per Round Trip:</span>
+                                        <span class="text-white">$6.56</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="grid sm:grid-cols-3 gap-4 mb-6">
-                            <div class="text-center">
-                                <div class="text-sm text-gray-600">Annual Savings</div>
-                                <div class="text-xl font-bold text-green-600">$315</div>
+                        <div class="grid sm:grid-cols-3 gap-6 text-center">
+                            <div class="cyber-data-flow p-4 rounded-lg">
+                                <div class="cyber-label mb-2">ANNUAL SAVINGS</div>
+                                <div class="cyber-glow-text text-2xl font-bold">$315</div>
                             </div>
-                            <div class="text-center">
-                                <div class="text-sm text-gray-600">ROI</div>
-                                <div class="text-xl font-bold">1.58%</div>
+                            <div class="cyber-data-flow p-4 rounded-lg">
+                                <div class="cyber-label mb-2">ROI PERCENTAGE</div>
+                                <div class="cyber-glow-text text-2xl font-bold">1.58%</div>
                             </div>
-                            <div class="text-center">
-                                <div class="text-sm text-gray-600">Payback</div>
-                                <div class="text-xl font-bold">63.5 yrs</div>
+                            <div class="cyber-data-flow p-4 rounded-lg">
+                                <div class="cyber-label mb-2">PAYBACK PERIOD</div>
+                                <div class="cyber-glow-text text-2xl font-bold">63.5 YRS</div>
                             </div>
                         </div>
                         
-                        <div class="bg-gray-50 p-4 rounded">
-                            <div class="font-medium mb-2">Elevation Profile</div>
-                            <div class="h-32 bg-gradient-to-r from-blue-200 to-green-200 rounded flex items-end justify-center">
-                                <div class="text-gray-600 text-sm">Interactive Chart</div>
+                        <div class="cyber-card p-4">
+                            <div class="cyber-label mb-4">ELEVATION PROFILE ANALYSIS</div>
+                            <div class="bg-black/50 rounded-lg p-4 h-48 flex items-center justify-center">
+                                <div class="text-gray-400 text-sm">Interactive Elevation Chart</div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="text-center">
-                        <button onclick="loadApp()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <button onclick="loadApp()" class="cyber-button">
                             Try Live App
                         </button>
                     </div>
                 </div>
             `;
+            lucide.createIcons();
         }
 
         // Update loading message based on environment
@@ -592,7 +707,12 @@
                 if (isLocal) {
                     loadingMessage.textContent = 'If the app doesn\'t load, make sure the Next.js development server is running on localhost:3000';
                 } else {
-                    loadingMessage.textContent = 'Loading the deployed application from https://commuter-e2zp.vercel.app...';
+                    const currentDomain = window.location.origin;
+                    let appUrl = currentDomain;
+                    if (window.location.pathname.includes('showcase') || window.location.hostname.includes('showcase')) {
+                        appUrl = currentDomain.replace('/showcase', '').replace('showcase.', '');
+                    }
+                    loadingMessage.textContent = `Loading the deployed application from ${appUrl}...`;
                 }
             }
         }
