@@ -1,188 +1,105 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { ChargingStation, StationFilters, StationStats } from '@/lib/types';
-import Sidebar from '@/components/Sidebar';
-import LoadingOverlay from '@/components/LoadingOverlay';
 
-// Dynamically import Plot component to avoid SSR issues
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
-export default function Dashboard() {
-  const [stations, setStations] = useState<ChargingStation[]>([]);
-  const [filteredStations, setFilteredStations] = useState<ChargingStation[]>([]);
-  const [states, setStates] = useState<string[]>([]);
+export default function EVMap() {
+  const [stations, setStations] = useState([]);
+  const [hoveredStations, setHoveredStations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingStations, setLoadingStations] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<StationFilters>({
-    state: '',
-    access: '',
-    free: ''
-  });
-  const [viewportBounds, setViewportBounds] = useState<{
-    north: number;
-    south: number;
-    east: number;
-    west: number;
-  } | null>(null);
-  const plotRef = useRef<any>(null);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    loadInitialData();
+    loadStations();
   }, []);
 
-  useEffect(() => {
-    if (viewportBounds) {
-      loadViewportStations();
-    }
-  }, [viewportBounds, filters]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadInitialData = async () => {
+  const loadStations = async () => {
     try {
       const response = await fetch('/api/stations');
-      if (!response.ok) {
-        throw new Error('Failed to load station data');
-      }
       const data = await response.json();
-      setStates(data.states);
+      setStations(data.stations);
       setLoading(false);
-    } catch (err) {
-      console.error('Error loading station data:', err);
-      setError('Failed to load station data');
+    } catch (error) {
+      console.error('Error loading stations:', error);
       setLoading(false);
     }
   };
 
-  const loadViewportStations = useCallback(async () => {
-    if (!viewportBounds) return;
-
-    // Clear any existing timeout
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-    }
-
-    // Debounce the API call
-    loadingTimeoutRef.current = setTimeout(async () => {
-      setLoadingStations(true);
-      try {
-        const params = new URLSearchParams({
-          north: viewportBounds.north.toString(),
-          south: viewportBounds.south.toString(),
-          east: viewportBounds.east.toString(),
-          west: viewportBounds.west.toString()
-        });
-
-        const response = await fetch(`/api/stations?${params}`);
-        if (!response.ok) {
-          throw new Error('Failed to load viewport stations');
-        }
-        const data = await response.json();
-        
-        // Apply filters to the viewport stations
-        const filtered = data.stations.filter((station: ChargingStation) => {
-          const stateMatch = !filters.state || station.state === filters.state;
-          const accessMatch = !filters.access || station.access === filters.access;
-          const freeMatch = !filters.free || station.isFree.toString() === filters.free;
-          
-          return stateMatch && accessMatch && freeMatch;
-        });
-        
-        setFilteredStations(filtered);
-      } catch (err) {
-        console.error('Error loading viewport stations:', err);
-      } finally {
-        setLoadingStations(false);
-      }
-    }, 300); // 300ms debounce
-  }, [viewportBounds, filters]);
-
-  const updateFilters = (newFilters: Partial<StationFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  };
-
-  const handlePlotUpdate = (eventData: any) => {
-    if (eventData && eventData.layout && eventData.layout.geo) {
-      const geo = eventData.layout.geo;
-      if (geo.lonaxis && geo.lataxis) {
-        const lonRange = geo.lonaxis.range;
-        const latRange = geo.lataxis.range;
-        
-        if (lonRange && latRange) {
-          setViewportBounds({
-            north: latRange[1],
-            south: latRange[0],
-            east: lonRange[1],
-            west: lonRange[0]
-          });
-        }
-      }
+  const handleHover = (eventData) => {
+    if (eventData.points && eventData.points.length > 0) {
+      const point = eventData.points[0];
+      const lat = point.lat;
+      const lon = point.lon;
+      
+      // Find stations near the hover point (within ~50 miles)
+      const nearbyStations = stations.filter(station => {
+        const distance = Math.sqrt(
+          Math.pow(station.lat - lat, 2) + Math.pow(station.lon - lon, 2)
+        );
+        return distance < 0.5; // Rough approximation for ~50 miles
+      });
+      
+      setHoveredStations(nearbyStations);
     }
   };
 
-  const stats: StationStats = {
-    total: filteredStations.length,
-    public: filteredStations.filter(s => s.access === 'public').length,
-    free: filteredStations.filter(s => s.isFree).length,
-    states: new Set(filteredStations.map(s => s.state)).size
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white text-xl">Loading charging stations...</div>
+      </div>
+    );
+  }
 
   const plotData = {
-    type: 'scattergeo' as const,
-    mode: 'markers' as const,
-    lat: filteredStations.map(s => s.lat),
-    lon: filteredStations.map(s => s.lon),
-    text: filteredStations.map(s => s.hover),
-    hoverinfo: 'text' as const,
+    type: 'scattergeo',
+    mode: 'markers',
+    lat: hoveredStations.map(s => s.lat),
+    lon: hoveredStations.map(s => s.lon),
+    text: hoveredStations.map(s => s.hover),
+    hoverinfo: 'text',
     marker: {
-      size: filteredStations.map(s => s.isFree ? 6 : 4),
-      color: filteredStations.map(s => s.isFree ? '#ffd700' : '#ff6b35'),
-      opacity: 0.9,
+      size: 8,
+      color: '#00ff88',
+      opacity: 0.8,
       line: {
-        width: 0.5,
-        color: filteredStations.map(s => s.isFree ? '#fff8dc' : '#fff5f0')
-      },
-      // Add luminous glow effect
-      symbol: 'circle' as const,
-      sizemode: 'diameter' as const,
-      sizeref: 1,
-      sizemin: 2,
-      sizemax: 8
+        width: 0,
+        color: '#ffffff'
+      }
     },
-    name: 'EV Charging Stations'
+    name: 'Charging Stations'
   };
 
-  const plotLayout = {
+  const layout = {
     geo: {
-      scope: 'usa' as const,
+      scope: 'usa',
       projection: {
-        type: 'albers usa' as const
+        type: 'albers usa'
       },
-      bgcolor: 'rgba(3, 12, 24, 0.8)',
+      bgcolor: 'rgba(0, 0, 0, 0.8)',
       showland: true,
-      landcolor: 'rgba(4, 18, 36, 0.8)',
+      landcolor: 'rgba(20, 20, 20, 0.8)',
       showlakes: true,
-      lakecolor: 'rgba(5, 20, 40, 0.8)',
+      lakecolor: 'rgba(0, 0, 0, 0.8)',
       showocean: true,
-      oceancolor: 'rgba(3, 12, 24, 0.8)',
-      coastlinecolor: 'rgba(20, 40, 80, 0.8)',
-      subunitcolor: 'rgba(25, 50, 100, 0.8)',
-      countrycolor: 'rgba(25, 50, 100, 0.8)',
+      oceancolor: 'rgba(0, 0, 0, 0.8)',
+      coastlinecolor: 'rgba(100, 100, 100, 0.8)',
+      subunitcolor: 'rgba(60, 60, 60, 0.8)',
+      countrycolor: 'rgba(60, 60, 60, 0.8)',
       showframe: false,
       showcoastlines: true,
       showcountries: true,
       showstates: true,
       lonaxis: {
-        range: [-180, -50] as [number, number]
+        range: [-180, -50]
       },
       lataxis: {
-        range: [20, 80] as [number, number]
+        range: [20, 80]
       }
     },
-    paper_bgcolor: 'rgba(3, 12, 24, 0.8)',
-    plot_bgcolor: 'rgba(3, 12, 24, 0.8)',
+    paper_bgcolor: 'rgba(0, 0, 0, 0.8)',
+    plot_bgcolor: 'rgba(0, 0, 0, 0.8)',
     margin: {
       l: 0,
       r: 0,
@@ -190,72 +107,25 @@ export default function Dashboard() {
       b: 0
     },
     showlegend: false,
-    hovermode: 'closest' as const
+    hovermode: 'closest'
   };
 
-  const plotConfig = {
+  const config = {
     displayModeBar: false,
     responsive: true,
     staticPlot: false
   };
 
-  // Performance optimization: Only render when we have data
-  if (filteredStations.length === 0 && !loadingStations) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-aurora-blue via-aurora-dark to-aurora-darker">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-aurora-accent mb-4">EV Charging Stations</h1>
-          <p className="text-aurora-text">Pan and zoom the map to explore charging stations</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return <LoadingOverlay />;
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-aurora-blue via-aurora-dark to-aurora-darker">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-aurora-accent mb-4">Error Loading Data</h1>
-          <p className="text-aurora-text">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-aurora-blue via-aurora-dark to-aurora-darker">
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] h-screen">
-        <Sidebar
-          states={states}
-          filters={filters}
-          stats={stats}
-          onFilterChange={updateFilters}
+    <div className="min-h-screen bg-black">
+      <div className="w-full h-screen">
+        <Plot
+          data={[plotData]}
+          layout={layout}
+          config={config}
+          style={{ width: '100%', height: '100%' }}
+          onHover={handleHover}
         />
-        
-        <div className="relative bg-aurora-blue">
-          {loadingStations && (
-            <div className="absolute top-4 right-4 z-10 bg-aurora-sidebar/90 backdrop-blur-sm border border-aurora-border/50 rounded-lg px-3 py-2 flex items-center space-x-2">
-              <div className="w-4 h-4 border-2 border-aurora-accent/30 border-t-aurora-accent rounded-full animate-spin"></div>
-              <span className="text-sm text-aurora-text">Loading stations...</span>
-            </div>
-          )}
-          <div className="w-full h-full">
-            <Plot
-              ref={plotRef}
-              data={[plotData]}
-              layout={plotLayout}
-              config={plotConfig}
-              style={{ width: '100%', height: '100%' }}
-              className="luminous-map"
-              onUpdate={handlePlotUpdate}
-              onInitialized={handlePlotUpdate}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
