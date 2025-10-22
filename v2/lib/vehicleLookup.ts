@@ -113,27 +113,40 @@ export function convertEPAtoVehicle(epaVehicle: EPAVehicle): Vehicle {
 }
 
 /**
- * Fetch vehicle makes - returns curated list of popular manufacturers
- * This ensures a clean, user-friendly list without obscure or non-automotive brands
+ * Fetch vehicle makes from NHTSA vPIC API
+ * Only returns makes for passenger vehicles (cars, trucks, SUVs, motorcycles)
  */
 export async function fetchVehicleMakes(): Promise<
   { id: number; name: string }[]
 > {
-  // Curated list of popular automotive manufacturers
-  // IDs are not critical here since we query by name in subsequent API calls
-  const popularMakes = [
-    { id: 1, name: "BMW" },
-    { id: 2, name: "Ford" },
-    { id: 3, name: "Honda" },
-    { id: 4, name: "Jeep" },
-    { id: 5, name: "Rivian" },
-    { id: 6, name: "Subaru" },
-    { id: 7, name: "Tesla" },
-    { id: 8, name: "Toyota" },
-    { id: 9, name: "Volkswagen" },
-  ];
+  try {
+    // Use GetMakesForVehicleType endpoint to filter passenger vehicles only
+    const response = await fetch(
+      "https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json",
+      { cache: "force-cache" } // Cache makes list
+    );
 
-  return popularMakes;
+    if (!response.ok) {
+      throw new Error(`NHTSA API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Remove duplicates and sort
+    const uniqueMakes = new Map<number, string>();
+    data.Results.forEach((make: any) => {
+      if (make.MakeId && make.MakeName) {
+        uniqueMakes.set(make.MakeId, make.MakeName);
+      }
+    });
+
+    return Array.from(uniqueMakes.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Error fetching vehicle makes:", error);
+    return [];
+  }
 }
 
 /**

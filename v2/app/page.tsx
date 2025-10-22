@@ -77,15 +77,6 @@ export default function Page() {
             ELEVATION-AWARE FUEL OPTIMIZATION SYSTEM
           </p>
           <div className="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
-          <div className="mt-6">
-            <a 
-              href="/showcase.html" 
-              target="_blank" 
-              className="text-purple-400 hover:text-purple-300 underline text-sm"
-            >
-              View Interactive Showcase →
-            </a>
-          </div>
         </div>
 
         <div className="cyber-card p-6 space-y-6">

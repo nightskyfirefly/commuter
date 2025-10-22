@@ -7,40 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### V2 Vehicle Search Implementation (December 2024)
-
-#### Added
-- **V2 Directory**: Complete second version with dynamic vehicle search capabilities
-- **Vehicle Search Component**: `v2/components/VehicleSearch.tsx` for year/make/model selection
-- **API Integration**: 
-  - `v2/app/api/vehicles/makes/route.ts` - Vehicle makes endpoint
-  - `v2/app/api/vehicles/models/route.ts` - Vehicle models endpoint
-  - `v2/app/api/vehicles/lookup/route.ts` - EPA vehicle data lookup
-- **Vehicle Lookup Library**: `v2/lib/vehicleLookup.ts` with NHTSA and EPA API integration
-- **Aurora Theme**: Complete visual redesign with northern lights color palette
-- **Showcase Pages**: 
-  - Updated `showcase/index.html` to embed live Vercel app
-  - Created `showcase/index-v2.html` with V2 feature highlights
-
-#### Changed
-- **Vehicle Makes List**: Replaced comprehensive API queries with curated list of 9 popular manufacturers
-  - Includes: BMW, Ford, Honda, Jeep, Rivian, Subaru, Tesla, Toyota, Volkswagen
-  - Eliminates non-vehicle companies from dropdown
-  - Instant load (no API calls needed)
-
-#### Known Issues
-- **CRITICAL**: EPA vehicle lookup returning "No vehicles found matching the criteria"
-  - Affects most vehicle searches, even common vehicles like 2024 Toyota Camry
-  - Investigation needed: EPA API format may have changed
-  - Debugging required: Test EPA API directly and verify response parsing
-  - Fallback data source may be needed if EPA API unavailable
-
-#### Technical Details
-- **Architecture**: Modular API routes with proper error handling
-- **Performance**: Parallel API calls with Promise.all for makes fetching
-- **Security**: Server-side API calls protect external API keys
-- **UI/UX**: Aurora theme with flowing animations and modern design
-
 ## [1.0.1] - 2024-12-17
 
 ### Critical Bug Fixes
