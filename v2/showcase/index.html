@@ -8,153 +8,162 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         :root {
-            --cyber-primary: #00ffff;
-            --cyber-secondary: #ff00ff;
-            --cyber-accent: #8b5cf6;
-            --cyber-bg-dark: #000000;
-            --cyber-bg-darker: #000000;
-            --cyber-surface: #0f0f0f;
-            --cyber-surface-light: #1a1a1a;
-            --cyber-text: #ffffff;
-            --cyber-text-muted: #666666;
-            --cyber-border: #222222;
-            --cyber-glow: rgba(0, 255, 255, 0.3);
+            --aurora-pink: #ff6ec7;
+            --aurora-blue: #4d9fff;
+            --aurora-purple: #b794f6;
+            --aurora-teal: #5ce1e6;
+            --bg-dark: #0a0a0f;
+            --bg-darker: #05050a;
+            --surface: #131318;
+            --text: #f5f5ff;
+            --text-muted: #8a8a9a;
+            --border: #2a2a38;
+            --glow-pink: rgba(255, 110, 199, 0.3);
+            --glow-blue: rgba(77, 159, 255, 0.3);
         }
 
         body {
-            background: #0d0d14;
-            color: var(--cyber-text);
+            background: radial-gradient(ellipse at top, var(--bg-dark) 0%, var(--bg-darker) 100%);
+            color: var(--text);
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         }
 
-        .cyber-grid {
+        .aurora-grid {
             background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
+                linear-gradient(rgba(255, 110, 199, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(77, 159, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
 
-        .cyber-title {
-            background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 50%, var(--cyber-accent) 100%);
+        .aurora-title {
+            background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-blue) 50%, var(--aurora-purple) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
+            animation: aurora-glow 3s ease-in-out infinite;
         }
 
-        .cyber-card {
-            background: var(--cyber-surface);
-            border: 1px solid var(--cyber-border);
-            border-radius: 8px;
+        .aurora-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
 
-        .cyber-card:hover {
-            border-color: var(--cyber-primary);
-            box-shadow: 0 0 20px var(--cyber-glow);
-            transform: translateY(-5px);
+        .aurora-card:hover {
+            border-color: var(--aurora-pink);
+            box-shadow: 0 0 30px var(--glow-pink);
+            transform: translateY(-8px);
         }
 
-        .cyber-card::before {
+        .aurora-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cyber-primary), transparent);
-            animation: cyber-scan 3s infinite;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--aurora-pink), var(--aurora-teal), transparent);
+            animation: aurora-wave 4s infinite;
         }
 
-        .cyber-button {
-            background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 100%);
-            color: var(--cyber-bg-dark);
+        .aurora-button {
+            background: linear-gradient(135deg, var(--aurora-pink) 0%, var(--aurora-purple) 100%);
+            color: white;
             border: none;
-            border-radius: 6px;
-            padding: 12px 24px;
+            border-radius: 12px;
+            padding: 14px 28px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px var(--glow-pink);
         }
 
-        .cyber-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
+        .aurora-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px var(--glow-pink);
         }
 
-        .cyber-button::before {
+        .aurora-button::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            animation: cyber-scan 2s infinite;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: aurora-shimmer 2.5s infinite;
         }
 
         .feature-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--cyber-primary) 0%, var(--cyber-secondary) 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--aurora-pink), var(--aurora-purple));
+            box-shadow: 0 8px 25px var(--glow-pink);
         }
 
-        @keyframes cyber-scan {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        .aurora-glow-text {
+            color: var(--aurora-pink);
+            text-shadow: 0 0 20px var(--glow-pink);
         }
 
-        .cyber-glow-text {
-            text-shadow: 0 0 10px var(--cyber-primary);
+        .aurora-loader {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--aurora-pink);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
         }
 
-        .cyber-data-flow {
-            position: relative;
-            overflow: hidden;
+        @keyframes aurora-glow {
+            0%, 100% { filter: drop-shadow(0 0 20px var(--glow-pink)); }
+            50% { filter: drop-shadow(0 0 30px var(--glow-blue)); }
         }
 
-        .cyber-data-flow::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
-            animation: data-flow 4s infinite;
+        @keyframes aurora-wave {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
-        @keyframes data-flow {
-            0% { transform: translateY(-100%); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(100%); opacity: 0; }
+        @keyframes aurora-shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        iframe {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(255, 110, 199, 0.2);
         }
     </style>
 </head>
-<body class="cyber-grid">
+<body class="aurora-grid">
     <!-- Hero Section -->
     <div class="py-20">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center">
-                <h1 class="cyber-title text-5xl font-bold mb-6">COMMUTE COST ANALYZER</h1>
+                <h1 class="aurora-title text-5xl font-bold mb-6">COMMUTE COST ANALYZER</h1>
                 <p class="text-xl mb-8 opacity-90 text-gray-400 uppercase tracking-wider">ELEVATION-AWARE FUEL OPTIMIZATION SYSTEM</p>
-                <div class="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+                <div class="mt-4 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
                 <div class="flex justify-center space-x-4 mt-8">
-                    <button onclick="scrollToDemo()" class="cyber-button">
+                    <button onclick="scrollToDemo()" class="aurora-button">
                         INITIATE ANALYSIS
                     </button>
-                    <button onclick="scrollToFeatures()" class="border-2 border-cyan-400 text-cyan-400 px-8 py-3 rounded-lg font-semibold hover:bg-cyan-400 hover:text-black transition-colors uppercase tracking-wider">
+                    <button onclick="scrollToFeatures()" class="border-2 border-cyan-400 text-pink-400 px-8 py-3 rounded-lg font-semibold hover:bg-cyan-400 hover:text-white transition-colors uppercase tracking-wider">
                         SYSTEM SPECS
                     </button>
                 </div>
@@ -166,62 +175,62 @@
     <div id="features" class="py-20">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-16">
-                <h2 class="cyber-title text-4xl font-bold mb-4">SYSTEM CAPABILITIES</h2>
+                <h2 class="aurora-title text-4xl font-bold mb-4">SYSTEM CAPABILITIES</h2>
                 <p class="text-xl text-gray-400 uppercase tracking-wider">Advanced calculations beyond simple MPG estimates</p>
             </div>
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                <div class="cyber-card p-8">
+                <div class="aurora-card p-8">
                     <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
-                        <i data-lucide="mountain" class="text-black w-6 h-6"></i>
+                        <i data-lucide="mountain" class="text-white w-8 h-8"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4">ELEVATION-AWARE CALCULATIONS</h3>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">ELEVATION-AWARE CALCULATIONS</h3>
                     <p class="text-gray-400">Uses real elevation data to calculate energy consumption for hills and valleys, providing accurate fuel estimates.</p>
                 </div>
 
                 <!-- Feature 2 -->
-                <div class="cyber-card p-8">
+                <div class="aurora-card p-8">
                     <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
-                        <i data-lucide="car" class="text-black w-6 h-6"></i>
+                        <i data-lucide="car" class="text-white w-8 h-8"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4">HYBRID VS ICE COMPARISON</h3>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">HYBRID VS ICE COMPARISON</h3>
                     <p class="text-gray-400">Compare traditional vehicles with hybrids, including regenerative braking efficiency and engine differences.</p>
                 </div>
 
                 <!-- Feature 3 -->
-                <div class="cyber-card p-8">
+                <div class="aurora-card p-8">
                     <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
-                        <i data-lucide="gauge" class="text-black w-6 h-6"></i>
+                        <i data-lucide="gauge" class="text-white w-8 h-8"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4">SPEED DISTRIBUTION ANALYSIS</h3>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">SPEED DISTRIBUTION ANALYSIS</h3>
                     <p class="text-gray-400">Account for different driving speeds (65/70/75 mph) and their impact on fuel efficiency.</p>
                 </div>
 
                 <!-- Feature 4 -->
-                <div class="cyber-card p-8">
+                <div class="aurora-card p-8">
                     <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
-                        <i data-lucide="snowflake" class="text-black w-6 h-6"></i>
+                        <i data-lucide="snowflake" class="text-white w-8 h-8"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4">WINTER WEATHER MODELING</h3>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">WINTER WEATHER MODELING</h3>
                     <p class="text-gray-400">Factor in seasonal efficiency losses and winter weather impact on fuel consumption.</p>
                 </div>
 
                 <!-- Feature 5 -->
-                <div class="cyber-card p-8">
+                <div class="aurora-card p-8">
                     <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
-                        <i data-lucide="trending-up" class="text-black w-6 h-6"></i>
+                        <i data-lucide="trending-up" class="text-white w-8 h-8"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4">ROI & PAYBACK ANALYSIS</h3>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">ROI & PAYBACK ANALYSIS</h3>
                     <p class="text-gray-400">Calculate return on investment and payback periods for vehicle upgrades with detailed financial analysis.</p>
                 </div>
 
                 <!-- Feature 6 -->
-                <div class="cyber-card p-8">
+                <div class="aurora-card p-8">
                     <div class="feature-icon rounded-lg flex items-center justify-center mb-6">
-                        <i data-lucide="bar-chart-3" class="text-black w-6 h-6"></i>
+                        <i data-lucide="bar-chart-3" class="text-white w-8 h-8"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4">INTERACTIVE VISUALIZATION</h3>
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4">INTERACTIVE VISUALIZATION</h3>
                     <p class="text-gray-400">Visualize elevation profiles and see how terrain affects your fuel consumption in real-time.</p>
                 </div>
             </div>
@@ -232,21 +241,21 @@
     <div id="demo" class="py-20">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-16">
-                <h2 class="cyber-title text-4xl font-bold mb-4">INITIATE ANALYSIS</h2>
+                <h2 class="aurora-title text-4xl font-bold mb-4">INITIATE ANALYSIS</h2>
                 <p class="text-xl text-gray-400 uppercase tracking-wider">Enter your commute details and experience elevation-aware calculations</p>
             </div>
 
             <!-- App Embed Container -->
-            <div class="cyber-card overflow-hidden">
-                <div class="bg-gradient-to-r from-cyan-400 to-purple-500 p-6">
-                    <h3 class="cyber-title text-2xl font-bold">COMMUTE COST ANALYZER</h3>
+            <div class="aurora-card overflow-hidden">
+                <div class="bg-gradient-to-r from-pink-400 to-purple-500 p-6">
+                    <h3 class="aurora-title text-2xl font-bold">COMMUTE COST ANALYZER</h3>
                     <p class="text-gray-200 mt-2 uppercase tracking-wider">Real-time fuel cost analysis with elevation data</p>
                 </div>
                 
                 <!-- App Content -->
                 <div id="app-container" class="p-6">
                     <div class="text-center py-12">
-                        <div class="cyber-loader mx-auto mb-4"></div>
+                        <div class="aurora-loader mx-auto mb-4"></div>
                         <p class="text-gray-400 uppercase tracking-wider">INITIALIZING SYSTEM...</p>
                         <p class="text-sm text-gray-500 mt-2" id="loading-message">Loading application...</p>
                     </div>
@@ -255,22 +264,22 @@
 
             <!-- Demo Instructions -->
             <div class="mt-12 grid md:grid-cols-2 gap-8">
-                <div class="cyber-card p-8">
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4 flex items-center">
-                        <i data-lucide="map-pin" class="w-5 h-5 mr-2 text-cyan-400"></i>
+                <div class="aurora-card p-8">
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4 flex items-center">
+                        <i data-lucide="map-pin" class="w-5 h-5 mr-2 text-pink-400"></i>
                         TEST ROUTES
                     </h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><strong class="text-cyan-400">Quechee, VT → Londonderry, NH</strong> - Mountainous route with significant elevation changes</li>
-                        <li><strong class="text-cyan-400">San Francisco, CA → Oakland, CA</strong> - Bay Area commute with hills</li>
-                        <li><strong class="text-cyan-400">Denver, CO → Boulder, CO</strong> - High altitude route with elevation gain</li>
-                        <li><strong class="text-cyan-400">Seattle, WA → Bellevue, WA</strong> - Pacific Northwest terrain</li>
+                        <li><strong class="text-pink-400">Quechee, VT → Londonderry, NH</strong> - Mountainous route with significant elevation changes</li>
+                        <li><strong class="text-pink-400">San Francisco, CA → Oakland, CA</strong> - Bay Area commute with hills</li>
+                        <li><strong class="text-pink-400">Denver, CO → Boulder, CO</strong> - High altitude route with elevation gain</li>
+                        <li><strong class="text-pink-400">Seattle, WA → Bellevue, WA</strong> - Pacific Northwest terrain</li>
                     </ul>
                 </div>
 
-                <div class="cyber-card p-8">
-                    <h3 class="cyber-glow-text text-xl font-semibold mb-4 flex items-center">
-                        <i data-lucide="lightbulb" class="w-5 h-5 mr-2 text-cyan-400"></i>
+                <div class="aurora-card p-8">
+                    <h3 class="aurora-glow-text text-xl font-semibold mb-4 flex items-center">
+                        <i data-lucide="lightbulb" class="w-5 h-5 mr-2 text-pink-400"></i>
                         SYSTEM TIPS
                     </h3>
                     <ul class="space-y-2 text-gray-400">
@@ -289,40 +298,40 @@
     <div class="py-20">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-16">
-                <h2 class="cyber-title text-4xl font-bold mb-4">TECHNICAL EXCELLENCE</h2>
+                <h2 class="aurora-title text-4xl font-bold mb-4">TECHNICAL EXCELLENCE</h2>
                 <p class="text-xl text-gray-400 uppercase tracking-wider">Built with modern technologies and best practices</p>
             </div>
 
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="cyber-card p-6 text-center">
+                <div class="aurora-card p-6 text-center">
                     <div class="feature-icon w-16 h-16 mx-auto mb-4">
-                        <i data-lucide="code" class="w-8 h-8 text-black"></i>
+                        <i data-lucide="code" class="w-8 h-8 text-white"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-lg font-semibold mb-2">NEXT.JS 14</h3>
+                    <h3 class="aurora-glow-text text-lg font-semibold mb-2">NEXT.JS 14</h3>
                     <p class="text-gray-400">App Router with React Server Components</p>
                 </div>
 
-                <div class="cyber-card p-6 text-center">
+                <div class="aurora-card p-6 text-center">
                     <div class="feature-icon w-16 h-16 mx-auto mb-4">
-                        <i data-lucide="shield" class="w-8 h-8 text-black"></i>
+                        <i data-lucide="shield" class="w-8 h-8 text-white"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-lg font-semibold mb-2">TYPESCRIPT</h3>
+                    <h3 class="aurora-glow-text text-lg font-semibold mb-2">TYPESCRIPT</h3>
                     <p class="text-gray-400">Complete type safety throughout</p>
                 </div>
 
-                <div class="cyber-card p-6 text-center">
+                <div class="aurora-card p-6 text-center">
                     <div class="feature-icon w-16 h-16 mx-auto mb-4">
-                        <i data-lucide="server" class="w-8 h-8 text-black"></i>
+                        <i data-lucide="server" class="w-8 h-8 text-white"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-lg font-semibold mb-2">SERVER-SIDE</h3>
+                    <h3 class="aurora-glow-text text-lg font-semibold mb-2">SERVER-SIDE</h3>
                     <p class="text-gray-400">Protected API keys and calculations</p>
                 </div>
 
-                <div class="cyber-card p-6 text-center">
+                <div class="aurora-card p-6 text-center">
                     <div class="feature-icon w-16 h-16 mx-auto mb-4">
-                        <i data-lucide="layers" class="w-8 h-8 text-black"></i>
+                        <i data-lucide="layers" class="w-8 h-8 text-white"></i>
                     </div>
-                    <h3 class="cyber-glow-text text-lg font-semibold mb-2">MODULAR ARCH</h3>
+                    <h3 class="aurora-glow-text text-lg font-semibold mb-2">MODULAR ARCH</h3>
                     <p class="text-gray-400">Clean separation of concerns</p>
                 </div>
             </div>
@@ -333,13 +342,13 @@
     <div class="py-12 border-t border-gray-800">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center">
-                <h3 class="cyber-title text-2xl font-bold mb-4">COMMUTE COST ANALYZER</h3>
+                <h3 class="aurora-title text-2xl font-bold mb-4">COMMUTE COST ANALYZER</h3>
                 <p class="text-gray-400 mb-6 uppercase tracking-wider">Elevation-aware fuel cost analysis for smarter vehicle decisions</p>
                 <div class="flex justify-center space-x-6">
-                    <a href="https://github.com/nightskyfirefly" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-cyan-400 transition-colors">
+                    <a href="https://github.com/nightskyfirefly" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-pink-400 transition-colors">
                         <i data-lucide="github" class="w-6 h-6"></i>
                     </a>
-                    <a href="#" class="text-gray-400 hover:text-cyan-400 transition-colors">
+                    <a href="#" class="text-gray-400 hover:text-pink-400 transition-colors">
                         <i data-lucide="external-link" class="w-6 h-6"></i>
                     </a>
                 </div>
