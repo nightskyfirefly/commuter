@@ -370,8 +370,8 @@
                 // Local development
                 appUrl = 'http://localhost:3000';
             } else {
-                // Production/Vercel deployment - use current domain
-                appUrl = window.location.origin;
+                // Production/Vercel deployment - use the actual Vercel URL
+                appUrl = 'https://commuter-e2zp.vercel.app';
             }
             
             console.log('Loading app from:', appUrl);
@@ -413,7 +413,7 @@
             
             // Determine the environment for better error messaging
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const appUrl = isLocal ? 'http://localhost:3000' : window.location.origin;
+            const appUrl = isLocal ? 'http://localhost:3000' : 'https://commuter-e2zp.vercel.app';
             
             container.innerHTML = `
                 <div class="text-center py-12">
@@ -592,7 +592,7 @@
                 if (isLocal) {
                     loadingMessage.textContent = 'If the app doesn\'t load, make sure the Next.js development server is running on localhost:3000';
                 } else {
-                    loadingMessage.textContent = 'Loading the deployed application...';
+                    loadingMessage.textContent = 'Loading the deployed application from https://commuter-e2zp.vercel.app...';
                 }
             }
         }
