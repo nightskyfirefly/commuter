@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'EV Charging Stations Map',
-  description: 'Interactive map of electric vehicle charging stations across the United States',
+  title: 'EV Charging Stations Dashboard',
+  description: 'Interactive dashboard showing electric vehicle charging stations across the United States',
 }
 
 export default function RootLayout({
