@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mia Murphy - Finance × Data Portfolio</title>
+  <meta name="description" content="Finance-to-Data bridge: FP&A, P&L, dashboards, automation, and AI-driven reporting."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Prefer CDN, but we'll also dynamically load and fall back to a stub if blocked. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg: #090d14;               /* Deep midnight */
+      --panel: #0e1421;            /* Slightly lighter panel */
+      --panel-2: #0b111d;          /* Alt panel */
+      --text: #e6eefc;             /* Primary text */
+      --muted: #95a3c3;            /* Secondary text */
+      --accent: #3be7ff;           /* Neon cyan */
+      --accent-2: #b26dff;         /* Electric violet */
+      --accent-3: #7dfb6c;         /* Lime glow */
+      --ok: #7dfb6c;
+      --warn: #ffd166;
+      --bad: #ff6b6b;
+      --shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --blur: saturate(120%) blur(0.3px);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(59,231,255,.08), transparent 60%),
+                  radial-gradient(900px 600px at 90% -20%, rgba(178,109,255,.08), transparent 60%),
+                  linear-gradient(180deg, #070b12 0%, var(--bg) 30% 100%);
+      color: var(--text);
+      line-height:1.6;
+    }
+    a{color:var(--accent);text-decoration:none}
+    a:hover{opacity:.9}
+
+    /* Layout */
+    .wrap{max-width:1200px;margin:0 auto;padding:28px}
+    header.nav{
+      position:sticky;top:0;z-index:50;backdrop-filter:blur(6px);
+      background:rgba(9,13,20,.65); border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .pulse{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent)}
+    nav ul{display:flex;gap:20px;list-style:none;margin:0;padding:0}
+    nav a{color:var(--text);opacity:.85}
+
+    /* Hero */
+    .hero{padding:90px 0 40px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:28px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005));
+      border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); box-shadow:var(--shadow); padding:26px}
+    .chip{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border-radius:999px;background:rgba(59,231,255,.1);
+      border:1px solid rgba(59,231,255,.25); color:var(--accent); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.12em}
+
+    h1{font-size:clamp(32px, 4vw, 56px); line-height:1.1; margin:10px 0 18px; font-weight:800}
+    .glow{background:linear-gradient(92deg, var(--accent), var(--accent-2), var(--accent-3));
+      -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 0 rgba(0,0,0,0)}
+    p.lead{font-size:clamp(16px,1.5vw,20px);color:var(--muted)}
+
+    .cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+    .btn{cursor:pointer; border:1px solid rgba(255,255,255,.1); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      padding:12px 16px;border-radius:12px;color:var(--text);font-weight:700;transition:transform .1s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{border-color:rgba(59,231,255,.4); background:linear-gradient(180deg, rgba(59,231,255,.18), rgba(59,231,255,.05)); color:#8ce4ff}
+    .btn.aurora-btn{
+      background: linear-gradient(135deg, #ff6ec7 0%, #4d9fff 50%, #b794f6 100%);
+      border: 1px solid rgba(255,110,199,.4);
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(255,110,199,.3);
+    }
+    .btn.aurora-btn:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255,110,199,.4), 0 0 20px rgba(77,159,255,.3);
+    }
+    .btn.aurora-btn::before{
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+      animation: aurora-shimmer 2.5s infinite;
+    }
+    @keyframes aurora-shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    /* App Showcase */
+    .app-showcase{max-width:800px;margin:0 auto}
+    .aurora-card{
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005));
+      border: 1px solid rgba(255,110,199,.2);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,.45), 0 0 20px rgba(255,110,199,.1);
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+    .aurora-card:hover{
+      border-color: rgba(255,110,199,.4);
+      box-shadow: 0 15px 40px rgba(0,0,0,.5), 0 0 30px rgba(255,110,199,.2);
+      transform: translateY(-4px);
+    }
+    .aurora-card::before{
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #ff6ec7, #4d9fff, #b794f6, transparent);
+      animation: aurora-wave 4s infinite;
+    }
+    @keyframes aurora-wave {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+    .app-header{
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 24px 16px;
+      background: linear-gradient(135deg, rgba(255,110,199,.1), rgba(77,159,255,.1));
+    }
+    .app-icon{
+      font-size: 32px;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ff6ec7, #4d9fff);
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(255,110,199,.3);
+    }
+    .app-info{flex: 1}
+    .app-title{
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 4px;
+      background: linear-gradient(135deg, #ff6ec7, #4d9fff, #b794f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .app-subtitle{
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .app-badge{
+      background: linear-gradient(135deg, #ff6ec7, #b794f6);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(255,110,199,.3);
+    }
+    .app-content{padding: 0 24px 24px}
+    .app-description{
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0 0 20px;
+    }
+    .app-features{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .feature-tag{
+      background: rgba(255,110,199,.1);
+      border: 1px solid rgba(255,110,199,.3);
+      color: #ff6ec7;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .app-tech{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tech-item{
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.1);
+      color: var(--muted);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: "JetBrains Mono", monospace;
+    }
+    .app-footer{
+      padding: 0 24px 24px;
+      display: flex;
+      justify-content: center;
+    }
+    .aurora-btn{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #ff6ec7 0%, #4d9fff 50%, #b794f6 100%);
+      border: 1px solid rgba(255,110,199,.4);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(255,110,199,.3);
+      transition: all 0.3s ease;
+    }
+    .aurora-btn:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255,110,199,.4), 0 0 20px rgba(77,159,255,.3);
+    }
+    .aurora-btn::before{
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+      animation: aurora-shimmer 2.5s infinite;
+    }
+    .aurora-btn svg{
+      transition: transform 0.3s ease;
+    }
+    .aurora-btn:hover svg{
+      transform: translate(2px, -2px);
+    }
+
+    /* Project Navigation */
+    .project-nav{
+      margin-top: 24px;
+      text-align: center;
+    }
+    .nav-header{
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .nav-buttons{
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .project-btn{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255,255,255,.1);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .project-btn:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.2);
+      box-shadow: 0 6px 20px rgba(0,0,0,.3);
+    }
+    .project-btn:nth-child(1):hover{
+      border-color: rgba(255,110,199,.4);
+      box-shadow: 0 6px 20px rgba(255,110,199,.2);
+    }
+    .project-btn:nth-child(2):hover{
+      border-color: rgba(77,159,255,.4);
+      box-shadow: 0 6px 20px rgba(77,159,255,.2);
+    }
+    .project-icon{
+      font-size: 16px;
+      line-height: 1;
+    }
+    .project-name{
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Highlights */
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+    @media (max-width:900px){.kpis{grid-template-columns:1fr}}
+    .kpi{border-radius:var(--radius-sm); background:var(--panel); border:1px solid rgba(255,255,255,.06); padding:18px}
+    .kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+    .kpi .value{font-size:28px;font-weight:800}
+
+    /* Section headers */
+    .section{padding:52px 0}
+    .section h2{font-size:28px;margin:0 0 10px;font-weight:800}
+    .muted{color:var(--muted)}
+
+    /* Dashboard gallery */
+    .dash-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+    @media (max-width:980px){.dash-grid{grid-template-columns:1fr}}
+    .dash{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005)); border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden}
+    .dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--panel-2);
+      border-bottom:1px solid rgba(255,255,255,.06)}
+    .dash-title{font-weight:700}
+    .pill{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);color:var(--muted)}
+    .dash-body{padding:16px}
+
+    .legend{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0 0}
+    .legend span{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}
+    .dot{width:10px;height:10px;border-radius:50%}
+
+    /* Experience cards */
+    .timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media (max-width:1100px){.timeline{grid-template-columns:1fr}}
+    .job{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:18px}
+    .job h3{margin:0 0 8px}
+    .job .when{color:var(--muted);font-size:12px}
+
+    footer{padding:40px 0;color:var(--muted);border-top:1px solid rgba(255,255,255,.06)}
+    .mono{font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .tagbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+    .tag{font-size:12px;color:var(--muted);border:1px dashed rgba(255,255,255,.12);padding:6px 10px;border-radius:999px}
+
+    /* Diagnostics (collapsed) */
+    details#diagnostics{margin-top:18px}
+    details#diagnostics summary{cursor:pointer;color:var(--muted)}
+    #testResults{white-space:pre-wrap; font-family:"JetBrains Mono", monospace; font-size:12px; color:var(--muted)}
+
+    /* Small warning banner if we fall back to stub */
+    #libWarning{display:none; margin:10px 0 0; padding:10px 12px; border:1px dashed rgba(255,255,255,.2); border-radius:12px; color:var(--warn);}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><span class="pulse"></span> Mia Murphy - <span class="glow">Finance × Data</span></div>
+      <nav>
+        <ul>
+          <li><a href="#work">Work</a></li>
+          <li><a href="#dashboards">Dashboards</a></li>
+          <li><a href="#apps">Apps</a></li>
+          <li><a href="#analysis">Analysis</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="resume.html">Resume</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- HERO -------------------------------------------------------------->
+    <section class="hero grid">
+      <div class="card">
+        <span class="chip mono">FP&A • Automation • AI Reporting</span>
+        <h1>
+          I help finance teams evolve from Excel-heavy workflows to
+          <span class="glow">intelligent, automated, AI-driven reporting</span>.
+        </h1>
+        <p class="lead">
+          With experience across FP&A, P&L management, and data analytics, I bridge finance, business, and technical teams -
+          translating real financial challenges into scalable data solutions.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="#dashboards">View live dashboards</a>
+          <a class="btn" href="#contact">Get in touch</a>
+        </div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="label">Monthly P&L</div>
+            <div class="value">$20M+</div>
+            <div class="muted">Managed & analyzed (Lactalis U.S. Yogurt)</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Close Cycle</div>
+            <div class="value">5 days</div>
+            <div class="muted">Controls + automation support</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Tooling</div>
+            <div class="value">SAP · TM1 · Power BI</div>
+            <div class="muted">+ Azure, Python, SQL</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="glow" style="margin-top:0">What I deliver</h2>
+        <ul style="margin-top:10px; padding-left:18px">
+          <li>Database-backed pipelines that replace fragile Excel chains.</li>
+          <li>Real-time dashboards for decision speed & tighter controls.</li>
+          <li>Agentic AI and Azure-based automations across FP&A workflows.</li>
+          <li>Executive-ready visuals that are simple, accurate, and fast.</li>
+        </ul>
+        <div class="tagbar">
+          <div class="tag">FP&A</div>
+          <div class="tag">P&L / CAPEX</div>
+          <div class="tag">Forecasting</div>
+          <div class="tag">Power BI & DAX</div>
+          <div class="tag">Python · SQL</div>
+          <div class="tag">Azure</div>
+          <div class="tag">Agentic AI</div>
+        </div>
+        <div class="project-nav">
+          <h3 class="nav-header">Explore My Work</h3>
+          <div class="nav-buttons">
+            <a href="#apps" class="project-btn">
+              <span class="project-icon">🚗</span>
+              <span class="project-name">Commute Analyzer</span>
+            </a>
+            <a href="#analysis" class="project-btn">
+              <span class="project-icon">🔬</span>
+              <span class="project-name">Fragrance Analysis</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APP SHOWCASE ----------------------------------------------------->
+    <section id="apps" class="section">
+      <h2 class="glow">Featured Application</h2>
+      <div class="app-showcase">
+        <div class="aurora-card">
+          <div class="app-header">
+            <div class="app-icon">🚗</div>
+            <div class="app-info">
+              <h3 class="app-title">Commute Cost Analyzer</h3>
+              <p class="app-subtitle">Elevation-Aware Fuel Optimization System</p>
+            </div>
+            <div class="app-badge">Live Demo</div>
+          </div>
+          <div class="app-content">
+            <p class="app-description">
+              Advanced fuel cost analysis using real elevation data to calculate energy consumption for hills and valleys. 
+              Compare traditional vehicles with hybrids, analyze speed distribution impact, and model winter weather effects 
+              for accurate fuel estimates and ROI calculations.
+            </p>
+            <div class="app-features">
+              <div class="feature-tag">Elevation Data</div>
+              <div class="feature-tag">Hybrid Comparison</div>
+              <div class="feature-tag">ROI Analysis</div>
+              <div class="feature-tag">Interactive Charts</div>
+            </div>
+            <div class="app-tech">
+              <span class="tech-item">Next.js 14</span>
+              <span class="tech-item">TypeScript</span>
+              <span class="tech-item">Tailwind CSS</span>
+              <span class="tech-item">Chart.js</span>
+            </div>
+          </div>
+          <div class="app-footer">
+            <a href="https://nightskyfirefly.github.io/commuter/v2/showcase/index.html" target="_blank" class="aurora-btn">
+              <span>Launch Application</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M7 17L17 7M17 7H7M17 7V17"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPLORATORY ANALYSIS -------------------------------------------->
+    <section id="analysis" class="section">
+      <h2 class="glow">Exploratory Analysis</h2>
+      <div class="app-showcase">
+        <div class="aurora-card">
+          <div class="app-header">
+            <div class="app-icon">🔬</div>
+            <div class="app-info">
+              <h3 class="app-title">Fragrance Trends Analysis</h3>
+              <p class="app-subtitle">Data-Driven Perfume Market Research</p>
+            </div>
+            <div class="app-badge">Research Project</div>
+          </div>
+          <div class="app-content">
+            <p class="app-description">
+              Comprehensive exploratory data analysis of the top 1,000 perfumes using custom web scraping tools to harvest 
+              fragrance note details, ratings, and market trends. Analyzed brand performance, gender preferences, seasonal patterns, 
+              and emerging market dynamics including the rise of Lattafa Perfumes and shifting consumer preferences.
+            </p>
+            <div class="app-features">
+              <div class="feature-tag">Web Scraping</div>
+              <div class="feature-tag">Data Analysis</div>
+              <div class="feature-tag">Market Research</div>
+              <div class="feature-tag">Visualization</div>
+            </div>
+            <div class="app-tech">
+              <span class="tech-item">Python</span>
+              <span class="tech-item">Pandas</span>
+              <span class="tech-item">Plotly</span>
+              <span class="tech-item">Seaborn</span>
+            </div>
+          </div>
+          <div class="app-footer">
+            <a href="https://nightskyfirefly.github.io/portfolio/projects/Fragrance_Analysis_1.html" target="_blank" class="aurora-btn">
+              <span>View Analysis</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M7 17L17 7M17 7H7M17 7V17"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARDS ------------------------------------------------------->
+    <section id="dashboards" class="section">
+      <h2 class="glow">Built-in Dashboards</h2>
+      <div class="dash-grid">
+
+        <!-- P&L OVERVIEW -->
+        <article class="dash" aria-labelledby="pl-title">
+          <div class="dash-head">
+            <div>
+              <div class="dash-title" id="pl-title">P&L Overview</div>
+              <div class="legend">
+                <span><span class="dot" style="background:var(--accent)"></span>Revenue</span>
+                <span><span class="dot" style="background:var(--accent-2)"></span>COGS</span>
+                <span><span class="dot" style="background:var(--accent-3)"></span>Gross Margin</span>
+              </div>
+            </div>
+            <span class="pill mono">Monthly</span>
+          </div>
+          <div class="dash-body"><canvas id="plChart" height="140"></canvas></div>
+        </article>
+
+        <!-- OEE & THROUGHPUT -->
+        <article class="dash" aria-labelledby="oee-title">
+          <div class="dash-head">
+            <div>
+              <div class="dash-title" id="oee-title">OEE & Throughput (Manufacturing)</div>
+              <div class="legend">
+                <span><span class="dot" style="background:var(--accent)"></span>OEE %</span>
+                <span><span class="dot" style="background:var(--accent-2)"></span>Units/hr</span>
+              </div>
+            </div>
+            <span class="pill mono">Weekly</span>
+          </div>
+          <div class="dash-body"><canvas id="oeeChart" height="140"></canvas></div>
+        </article>
+
+        <!-- WORKING CAPITAL KPIs -->
+        <article class="dash" aria-labelledby="wc-title">
+          <div class="dash-head">
+            <div>
+              <div class="dash-title" id="wc-title">Working Capital</div>
+              <div class="legend">
+                <span><span class="dot" style="background:var(--accent)"></span>DSO</span>
+                <span><span class="dot" style="background:var(--accent-2)"></span>DPO</span>
+                <span><span class="dot" style="background:var(--accent-3)"></span>DIO</span>
+              </div>
+            </div>
+            <span class="pill mono">Quarterly</span>
+          </div>
+          <div class="dash-body"><canvas id="wcChart" height="140"></canvas></div>
+        </article>
+
+        <!-- CLOSE CYCLE TRACKER -->
+        <article class="dash" aria-labelledby="close-title">
+          <div class="dash-head">
+            <div>
+              <div class="dash-title" id="close-title">Close Cycle Tracker</div>
+            <div class="legend">
+              <span><span class="dot" style="background:var(--ok)"></span>On-time</span>
+              <span><span class="dot" style="background:var(--warn)"></span>At risk</span>
+              <span><span class="dot" style="background:var(--bad)"></span>Late</span>
+            </div>
+            </div>
+            <span class="pill mono">Tasks</span>
+          </div>
+          <div class="dash-body">
+            <div id="closeList" class="mono" style="display:grid;grid-template-columns:1fr auto;gap:8px"></div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- EXPERIENCE ------------------------------------------------------->
+    <section id="work" class="section">
+      <h2 class="glow">Roles & Impact</h2>
+      <div class="timeline">
+        <div class="job">
+          <h3>Lactalis U.S. Yogurt · Financial Analyst</h3>
+          <div class="when">P&L ($20M+ monthly), CAPEX, 5-day close, SAP FICO · IBM TM1 · Power BI</div>
+          <ul>
+            <li>Built database-driven pipelines to replace manual Excel processes with real-time dashboards.</li>
+            <li>Strengthened controls and shortened close cycles with automated checks and reconciliations.</li>
+          </ul>
+        </div>
+        <div class="job">
+          <h3>Better Buying · Data Analyst</h3>
+          <div class="when">Global brands: Amazon, Nike, Walmart, Target</div>
+          <ul>
+            <li>Turned supplier data into dashboards and shareholder insights that improved sourcing practices.</li>
+          </ul>
+        </div>
+        <div class="job">
+          <h3>Ann Clark Ltd. · Marketing Business Analyst</h3>
+          <div class="when">E-commerce analytics & optimization</div>
+          <ul>
+            <li>Supported 18% e-commerce revenue growth through performance tracking and marketing optimization.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT ------------------------------------------------------------>
+    <section id="about" class="section">
+      <h2 class="glow">Now @ Cornell - MS in Business Analytics</h2>
+      <p class="muted">
+        Focused on agentic AI and Azure-based finance automations - helping companies move beyond spreadsheets to smarter,
+        faster, data-driven decision-making.
+      </p>
+      <div class="tagbar">
+        <div class="tag">Azure Data Factory</div>
+        <div class="tag">Databricks</div>
+        <div class="tag">Power BI / DAX</div>
+        <div class="tag">SQL Server</div>
+        <div class="tag">Python</div>
+        <div class="tag">SAP FICO</div>
+        <div class="tag">IBM TM1</div>
+      </div>
+    </section>
+
+    <!-- CONTACT ---------------------------------------------------------->
+    <section id="contact" class="section">
+      <h2 class="glow">Let’s build your finance data stack</h2>
+      <p class="muted">Email: <a href="mailto:miamurphyvt@gmail.com">miamurphyvt@gmail.com</a> · LinkedIn: <a href="#">linkedin.com/in/miamurphyvt</a></p>
+      <div class="card">
+        <div class="mono">Engagement modes</div>
+        <ul style="margin:10px 0 0 18px">
+          <li>Dashboards & executive reporting (Power BI, Python, SQL).</li>
+          <li>Close cycle automation & controls.</li>
+          <li>Data pipelines (Azure · Databricks · SQL) feeding finance.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">© <span id="yr"></span> Mia Murphy</div>
+  </footer>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    // Ensure Chart.js is present; otherwise try to load it, and if that fails, install a stub
+    function ensureChart(callback){
+      if (window.Chart) { callback('existing'); return; }
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+      s.onload = function(){ callback('loaded'); };
+      s.onerror = function(){
+        // Lightweight no-op stub so the page doesn't crash in restricted environments
+        window.Chart = function(ctx, config){ this.ctx = ctx; this.config = config || {}; this.update = function(){}; this.destroy = function(){}; };
+        window.Chart.version = 'stub-0.1';
+        callback('stub');
+      };
+      document.head.appendChild(s);
+    }
+
+    function runApp(){
+      /* ------------------------------------------------------------------
+         MOCK DATA (swap for real data via fetch/DB later)
+         Replace arrays below or wire to APIs. Example schema:
+         - P&L: [{month:"2025-01", revenue: 3.2e6, cogs: 1.9e6}]
+         - OEE: [{week:"2025-W01", oee: 68, throughput: 540}]
+         - Working Capital: [{quarter:"2025-Q1", dso: 44, dpo: 58, dio: 39}]
+         - Close tasks: [{name:"Post journal entries", status:"ok"|"warn"|"bad"}]
+      -------------------------------------------------------------------*/
+
+      var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+      var pl = [
+        {m:0, rev: 3.2, cogs: 1.9}, {m:1, rev: 3.4, cogs: 2.0}, {m:2, rev: 3.1, cogs: 1.8},
+        {m:3, rev: 3.6, cogs: 2.1}, {m:4, rev: 3.9, cogs: 2.2}, {m:5, rev: 4.2, cogs: 2.4},
+        {m:6, rev: 4.0, cogs: 2.3}, {m:7, rev: 4.3, cogs: 2.5}, {m:8, rev: 4.5, cogs: 2.6},
+        {m:9, rev: 4.8, cogs: 2.7}, {m:10, rev: 4.6, cogs: 2.6}, {m:11, rev: 5.0, cogs: 2.8}
+      ];
+      var oee = [62, 65, 63, 68, 70, 72, 69, 74, 73, 75, 77, 79].map(function(v,i){return {w:'W'+(i+1), oee:v, thr: 520+ i*12 + (i%3?18:-10)};});
+      var wc  = [
+        {q:"2024‑Q4", dso: 46, dpo: 55, dio: 41},
+        {q:"2025‑Q1", dso: 44, dpo: 58, dio: 39},
+        {q:"2025‑Q2", dso: 43, dpo: 60, dio: 37},
+        {q:"2025‑Q3", dso: 42, dpo: 61, dio: 36}
+      ];
+      var closeTasks = [
+        {name:"Trial balance import", status:"ok"},
+        {name:"Intercompany eliminations", status:"warn"},
+        {name:"Accruals & deferrals", status:"ok"},
+        {name:"Inventory reconciliation", status:"bad"},
+        {name:"AP/AR aging refresh", status:"ok"}
+      ];
+
+      /* ---------------------- Chart helpers (night mode) -----------------*/
+      var baseTicks = { color: getComputedStyle(document.documentElement).getPropertyValue('--muted') };
+      var gridColor = 'rgba(255,255,255,.07)';
+
+      // Show banner if using stub
+      var warn = document.getElementById('libWarning');
+      if (!window.Chart || String(window.Chart.version || '').indexOf('stub') === 0) {
+        if (warn) warn.style.display = 'block';
+      }
+
+      // P&L Chart
+      var plCtx = document.getElementById('plChart').getContext('2d');
+      var grossMargin = pl.map(function(x){ return +(x.rev - x.cogs).toFixed(2); });
+      var plChart = new Chart(plCtx, {
+        type: 'line',
+        data: {
+          labels: pl.map(function(x){ return months[x.m]; }),
+          datasets: [
+            {label:'Revenue', data: pl.map(function(x){return x.rev;}), tension:.35, borderWidth:2},
+            {label:'COGS', data: pl.map(function(x){return x.cogs;}), tension:.35, borderWidth:2},
+            {label:'Gross Margin', data: grossMargin, type:'bar', borderWidth:0}
+          ]
+        },
+        options: {
+          interaction: {mode:'index', intersect:false},
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {labels: {color: baseTicks.color}},
+            tooltip: {callbacks:{label:function(ctx){return ctx.dataset.label+': $'+ctx.formattedValue+'M';}}}
+          },
+          scales: {
+            x: {ticks: baseTicks, grid:{color:gridColor}},
+            y: {ticks: baseTicks, grid:{color:gridColor}, suggestedMin:0}
+          }
+        }
+      });
+
+      // OEE & Throughput
+      var oeeCtx = document.getElementById('oeeChart').getContext('2d');
+      var oeeChart = new Chart(oeeCtx, {
+        data: {
+          labels: oee.map(function(x){return x.w;}),
+          datasets: [
+            {type:'line', label:'OEE %', data: oee.map(function(x){return x.oee;}), yAxisID:'y', tension:.35, borderWidth:2},
+            {type:'bar',  label:'Units/hr', data: oee.map(function(x){return x.thr;}), yAxisID:'y1'}
+          ]
+        },
+        options: {
+          interaction:{mode:'index',intersect:false},
+          maintainAspectRatio:false,
+          plugins:{ legend:{labels:{color: baseTicks.color}} },
+          scales:{
+            x:{ticks: baseTicks, grid:{color:gridColor}},
+            y:{position:'left', ticks:{color: baseTicks.color, callback:function(v){return v+'%';}}, grid:{color:gridColor}},
+            y1:{position:'right', ticks: baseTicks, grid:{drawOnChartArea:false}}
+          }
+        }
+      });
+
+      // Working Capital (radar for quick balance view)
+      var wcCtx = document.getElementById('wcChart').getContext('2d');
+      var wcChart = new Chart(wcCtx, {
+        type:'radar',
+        data:{
+          labels:['DSO','DPO','DIO'],
+          datasets: wc.map(function(row){ return { label: row.q, data: [row.dso,row.dpo,row.dio] }; })
+        },
+        options:{
+          maintainAspectRatio:false,
+          plugins:{ legend:{labels:{color: baseTicks.color}} },
+          scales:{ r:{ angleLines:{color:gridColor}, grid:{color:gridColor}, pointLabels:{color: baseTicks.color}, ticks:{display:false}} }
+        }
+      });
+
+      // Close cycle task list
+      var listEl = document.getElementById('closeList');
+      closeTasks.forEach(function(t){
+        var name = document.createElement('div');
+        name.textContent = t.name; name.style.padding = '8px 0';
+        var status = document.createElement('div');
+        status.textContent = t.status.toUpperCase();
+        status.className = 'pill mono';
+        if(t.status==='ok'){ status.style.color = 'var(--ok)'; status.style.borderColor='rgba(125,251,108,.35)'; }
+        if(t.status==='warn'){ status.style.color = 'var(--warn)'; status.style.borderColor='rgba(255,209,102,.35)'; }
+        if(t.status==='bad'){ status.style.color = 'var(--bad)'; status.style.borderColor='rgba(255,107,107,.35)'; }
+        listEl.appendChild(name); listEl.appendChild(status);
+      });
+
+    }
+
+    // Kick everything off once Chart is present or stubbed
+    ensureChart(function(_mode){ runApp(); });
+  </script>
+</body>
+</html>

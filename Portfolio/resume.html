@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mia Murphy - Resume</title>
+  <meta name="description" content="Finance × Data Professional - FP&A, P&L, dashboards, automation, and AI-driven reporting."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #090d14;               /* Deep midnight */
+      --panel: #0e1421;            /* Slightly lighter panel */
+      --panel-2: #0b111d;          /* Alt panel */
+      --text: #e6eefc;             /* Primary text */
+      --muted: #95a3c3;            /* Secondary text */
+      --accent: #3be7ff;           /* Neon cyan */
+      --accent-2: #b26dff;         /* Electric violet */
+      --accent-3: #7dfb6c;         /* Lime glow */
+      --ok: #7dfb6c;
+      --warn: #ffd166;
+      --bad: #ff6b6b;
+      --shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.02);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --blur: saturate(120%) blur(0.3px);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(59,231,255,.08), transparent 60%),
+                  radial-gradient(900px 600px at 90% -20%, rgba(178,109,255,.08), transparent 60%),
+                  linear-gradient(180deg, #070b12 0%, var(--bg) 30% 100%);
+      color: var(--text);
+      line-height:1.6;
+    }
+    a{color:var(--accent);text-decoration:none}
+    a:hover{opacity:.9}
+
+    /* Layout */
+    .wrap{max-width:1000px;margin:0 auto;padding:28px}
+    header.nav{
+      position:sticky;top:0;z-index:50;backdrop-filter:blur(6px);
+      background:rgba(9,13,20,.65); border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px}
+    .pulse{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent)}
+    nav ul{display:flex;gap:20px;list-style:none;margin:0;padding:0}
+    nav a{color:var(--text);opacity:.85}
+
+    /* Resume Header */
+    .resume-header{padding:40px 0;text-align:center}
+    .resume-title{
+      font-size:clamp(32px, 4vw, 48px); 
+      line-height:1.1; 
+      margin:0 0 8px; 
+      font-weight:800;
+      background:linear-gradient(92deg, var(--accent), var(--accent-2), var(--accent-3));
+      -webkit-background-clip:text; 
+      background-clip:text; 
+      color:transparent; 
+      text-shadow:0 0 0 rgba(0,0,0,0)
+    }
+    .resume-subtitle{
+      font-size:clamp(16px,1.5vw,20px);
+      color:var(--muted);
+      margin:0 0 20px;
+    }
+    .contact-info{
+      display:flex;
+      justify-content:center;
+      gap:24px;
+      flex-wrap:wrap;
+      margin-top:20px;
+    }
+    .contact-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    /* Resume Sections */
+    .resume-section{padding:32px 0}
+    .section-title{
+      font-size:24px;
+      margin:0 0 20px;
+      font-weight:800;
+      background:linear-gradient(92deg, var(--accent), var(--accent-2));
+      -webkit-background-clip:text; 
+      background-clip:text; 
+      color:transparent;
+      border-bottom:2px solid rgba(59,231,255,.3);
+      padding-bottom:8px;
+    }
+
+    /* Experience Cards */
+    .experience-item{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005));
+      border:1px solid rgba(255,255,255,.06); 
+      border-radius:var(--radius); 
+      box-shadow:var(--shadow); 
+      padding:24px;
+      margin-bottom:20px;
+    }
+    .job-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    .job-title{
+      font-size:18px;
+      font-weight:700;
+      margin:0;
+    }
+    .company{
+      color:var(--accent);
+      font-weight:600;
+    }
+    .job-dates{
+      color:var(--muted);
+      font-size:14px;
+      font-weight:600;
+    }
+    .job-description{
+      color:var(--text);
+      margin:12px 0;
+    }
+    .job-highlights{
+      list-style:none;
+      padding:0;
+      margin:12px 0 0;
+    }
+    .job-highlights li{
+      position:relative;
+      padding-left:20px;
+      margin-bottom:8px;
+      color:var(--text);
+    }
+    .job-highlights li::before{
+      content:'•';
+      color:var(--accent);
+      font-weight:bold;
+      position:absolute;
+      left:0;
+    }
+
+    /* Skills Grid */
+    .skills-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+      gap:16px;
+    }
+    .skill-category{
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius-sm);
+      padding:20px;
+    }
+    .skill-category h4{
+      margin:0 0 12px;
+      color:var(--accent);
+      font-size:16px;
+      font-weight:700;
+    }
+    .skill-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .skill-tag{
+      background:rgba(59,231,255,.1);
+      border:1px solid rgba(59,231,255,.25);
+      color:var(--accent);
+      padding:4px 8px;
+      border-radius:6px;
+      font-size:12px;
+      font-weight:600;
+    }
+
+    /* Education */
+    .education-item{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005));
+      border:1px solid rgba(255,255,255,.06); 
+      border-radius:var(--radius); 
+      box-shadow:var(--shadow); 
+      padding:24px;
+    }
+    .degree{
+      font-size:18px;
+      font-weight:700;
+      margin:0 0 4px;
+    }
+    .school{
+      color:var(--accent);
+      font-weight:600;
+      margin-bottom:8px;
+    }
+    .education-dates{
+      color:var(--muted);
+      font-size:14px;
+    }
+    .degree-skills{
+      color:var(--muted);
+      font-size:13px;
+      font-style:italic;
+      margin:8px 0 0;
+      line-height:1.4;
+    }
+
+    /* Projects */
+    .project-item{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005));
+      border:1px solid rgba(255,255,255,.06); 
+      border-radius:var(--radius); 
+      box-shadow:var(--shadow); 
+      padding:24px;
+      margin-bottom:20px;
+    }
+    .project-title{
+      font-size:18px;
+      font-weight:700;
+      margin:0 0 8px;
+      color:var(--accent);
+    }
+    .project-tech{
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:12px;
+    }
+
+    /* Print Styles */
+    @media print {
+      body{background:#fff;color:#000}
+      .nav{display:none}
+      .wrap{max-width:none;padding:0}
+      .resume-section{padding:20px 0}
+      .experience-item, .education-item, .project-item{
+        box-shadow:none;
+        border:1px solid #ddd;
+        page-break-inside:avoid;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width:768px){
+      .contact-info{flex-direction:column;gap:12px}
+      .job-header{flex-direction:column;align-items:flex-start}
+      .skills-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand"><span class="pulse"></span> Mia Murphy - <span class="glow">Finance × Data</span></div>
+      <nav>
+        <ul>
+          <li><a href="index.html">Portfolio</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- RESUME HEADER -->
+    <section class="resume-header">
+      <h1 class="resume-title">Mia Murphy</h1>
+      <p class="resume-subtitle">Finance × Data Professional</p>
+      <div class="contact-info">
+        <div class="contact-item">
+          <span>📞</span>
+          <span>(802) 310-7443</span>
+        </div>
+        <div class="contact-item">
+          <span>📧</span>
+          <span>miamurphyvt@gmail.com</span>
+        </div>
+        <div class="contact-item">
+          <span>🔗</span>
+          <span>linkedin.com/in/miamurphyvt</span>
+        </div>
+        <div class="contact-item">
+          <span>🌐</span>
+          <span>Portfolio → GitHub</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFESSIONAL SUMMARY -->
+    <section class="resume-section">
+      <h2 class="section-title">Professional Summary</h2>
+      <div class="experience-item">
+        <p class="job-description">
+          Finance-to-Data bridge professional with expertise in FP&A, P&L management, and data analytics. 
+          Specializes in translating real financial challenges into scalable data solutions, building 
+          database-driven pipelines to replace manual Excel processes, and implementing agentic AI 
+          and Azure-based automations across FP&A workflows.
+        </p>
+      </div>
+    </section>
+
+    <!-- KEY ACHIEVEMENTS -->
+    <section class="resume-section">
+      <h2 class="section-title">Key Achievements</h2>
+      <div class="experience-item">
+        <ul class="job-highlights">
+          <li>Consolidated and automated financial close processes, cutting manual effort by 50%</li>
+          <li>Built real-time Power BI dashboards for daily, weekly, and monthly KPI tracking</li>
+          <li>Led P&L management and forecasting for $20M+ monthly revenue streams</li>
+          <li>Designed NPV/IRR-based CAPEX prioritization, optimizing $30M in spend</li>
+          <li>Trained and mentored 4 analysts on FP&A automation and dashboard best practices</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section class="resume-section">
+      <h2 class="section-title">Professional Experience</h2>
+      
+      <div class="experience-item">
+        <div class="job-header">
+          <div>
+            <h3 class="job-title">Strategic & Business Advisor</h3>
+            <div class="company">Politheon (Georgia Tech CreateX Startup)</div>
+          </div>
+          <div class="job-dates">2025 - Present</div>
+        </div>
+        <div class="job-description">
+          Atlanta, GA
+        </div>
+        <ul class="job-highlights">
+          <li>Serve as a liaison between business, policy stakeholders, and engineering teams, aligning technical development with strategic goals</li>
+          <li>Advise on agentic AI applications for policy insights, translating complex technical capabilities into business use cases</li>
+          <li>Contributed to product and growth strategy that led to Politheon being recognized as the #2 featured startup at Georgia Tech's CreateX showcase</li>
+        </ul>
+      </div>
+
+      <div class="experience-item">
+        <div class="job-header">
+          <div>
+            <h3 class="job-title">Senior Financial Analyst</h3>
+            <div class="company">Lactalis U.S. Yogurt</div>
+          </div>
+          <div class="job-dates">2024 - Present</div>
+        </div>
+        <div class="job-description">
+          Londonderry, NH
+        </div>
+        <ul class="job-highlights">
+          <li>Selected into controller development track, blending FP&A and accounting</li>
+          <li>Manage $20M+ P&L, CAPEX allocation, and month-end close in SAP/IBM TM1</li>
+          <li>Shortened close cycle to 5 days; improved reporting accuracy and controls</li>
+          <li>Partner with operations & engineering to align budgets with strategy</li>
+          <li>Built Power BI dashboards & automation reducing manual effort 40%+</li>
+        </ul>
+      </div>
+
+      <div class="experience-item">
+        <div class="job-header">
+          <div>
+            <h3 class="job-title">Data Analyst</h3>
+            <div class="company">Better Buying</div>
+          </div>
+          <div class="job-dates">2023 - 2024</div>
+        </div>
+        <div class="job-description">
+          Remote
+        </div>
+        <ul class="job-highlights">
+          <li>Partnered with global brands including Amazon, Nike, Walmart, and Target to analyze purchasing practices and improve supplier relationships</li>
+          <li>Produced shareholder and client reports from 500K+ supplier records, delivering $2M+ in annualized savings</li>
+          <li>Conducted consumer and retail trend analysis to link purchasing practices with market behavior and brand performance, supporting strategy discussions with executives and investors</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section class="resume-section">
+      <h2 class="section-title">Education</h2>
+      
+      <div class="education-item">
+        <h3 class="degree">M.S. in Analytics</h3>
+        <div class="school">Georgia Institute of Technology</div>
+        <div class="education-dates">2029</div>
+        <p class="degree-skills">Advanced machine learning, statistical modeling, data engineering, and AI applications</p>
+      </div>
+
+      <div class="education-item">
+        <h3 class="degree">M.S. in Business Analytics</h3>
+        <div class="school">Cornell SC Johnson College of Business</div>
+        <div class="education-dates">2026</div>
+        <p class="degree-skills">Agentic AI, Azure-based finance automations, business intelligence, and data-driven decision making</p>
+      </div>
+
+      <div class="education-item">
+        <h3 class="degree">B.A. Economics & Statistics</h3>
+        <div class="school">University of Vermont</div>
+        <div class="education-dates">2021</div>
+        <p class="degree-skills">Economic analysis, statistical methods, quantitative reasoning, and market research</p>
+      </div>
+    </section>
+
+    <!-- CERTIFICATIONS & SKILLS -->
+    <section class="resume-section">
+      <h2 class="section-title">Certifications & Skills</h2>
+      <div class="skills-grid">
+        <div class="skill-category">
+          <h4>Certifications</h4>
+          <div class="skill-tags">
+            <span class="skill-tag">Google Data Analytics</span>
+            <span class="skill-tag">SAP FICO</span>
+            <span class="skill-tag">IBM TM1</span>
+          </div>
+        </div>
+        <div class="skill-category">
+          <h4>Data & Analytics</h4>
+          <div class="skill-tags">
+            <span class="skill-tag">Power BI</span>
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">SQL</span>
+            <span class="skill-tag">R</span>
+            <span class="skill-tag">Tableau</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="resume-section">
+      <h2 class="section-title">Featured Projects</h2>
+      
+      <div class="project-item">
+        <h3 class="project-title">Commute Cost Analyzer</h3>
+        <div class="project-tech">Next.js 14 • TypeScript • Tailwind CSS • Chart.js</div>
+        <p class="job-description">
+          Elevation-aware fuel optimization system that calculates energy consumption for hills and valleys, 
+          compares traditional vehicles with hybrids, and provides ROI analysis for vehicle upgrades.
+        </p>
+      </div>
+
+      <div class="project-item">
+        <h3 class="project-title">Fragrance Trends Analysis</h3>
+        <div class="project-tech">Python • Pandas • Plotly • Seaborn</div>
+        <p class="job-description">
+          Comprehensive exploratory data analysis of top 1,000 perfumes using custom web scraping tools 
+          to analyze brand performance, gender preferences, and market trends.
+        </p>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="resume-section">
+      <h2 class="section-title">Contact Information</h2>
+      <div class="experience-item">
+        <div class="contact-info" style="justify-content:flex-start;gap:32px;">
+          <div class="contact-item">
+            <span>📧</span>
+            <a href="mailto:miamurphyvt@gmail.com">miamurphyvt@gmail.com</a>
+          </div>
+          <div class="contact-item">
+            <span>🔗</span>
+            <a href="https://linkedin.com/in/miamurphyvt" target="_blank">LinkedIn Profile</a>
+          </div>
+          <div class="contact-item">
+            <span>🌐</span>
+            <a href="index.html">Portfolio Website</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">© <span id="yr"></span> Mia Murphy</div>
+  </footer>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

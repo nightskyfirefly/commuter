@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Power BI–style Dashboard · Yogurt 2026 (Mock)</title>
+  <!-- Tailwind (CDN build) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <!-- Papa Parse for CSV upload -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Chart.js Matrix plugin for proper heatmaps -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
+  <style>
+    :root{
+      --bg: #0b0f1e;         /* deeper night */
+      --card: #11162b;       /* card */
+      --muted: #a3b0d9;      /* muted text */
+      --text: #f0f3ff;       /* main text */
+      --accent: #6ae6ff;     /* cyan */
+      --accent-2: #ffd166;   /* buttery yellow */
+      --accent-3: #ff7ad9;   /* neon pink */
+      --accent-4: #7cffb7;   /* neon mint */
+      --accent-5: #b38cff;   /* neon purple */
+      --good: #22c55e;       /* green */
+      --bad: #ef4444;        /* red */
+    }
+    html, body { background: var(--bg); color: var(--text); }
+    .kpi-card{ background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; box-shadow: 0 16px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(106,230,255,0.05); position: relative; overflow:hidden; backdrop-filter: blur(10px); }
+    .kpi-card::after{ content:""; position:absolute; inset:-1px; border-radius:1rem; padding:1px; background:linear-gradient(135deg,var(--accent),var(--accent-3),var(--accent-5)); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; opacity:.4; }
+    .pill{ background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+    .accent{ color: var(--accent); }
+    .accent-2{ color: var(--accent-2); }
+    .simple-table th, .simple-table td{ padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .simple-table th{ color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: .06em; }
+    .scroll-y{ overflow-y: auto; }
+    .hover-card:hover{ transform: translateY(-4px); transition: all .2s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(106,230,255,0.1); }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-20 backdrop-blur bg-[rgba(15,18,33,.7)] border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4Z" stroke="url(#g)" stroke-width="1.5"/>
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6ae6ff"/>
+              <stop offset="1" stop-color="#ffd166"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1 class="text-xl md:text-2xl font-semibold tracking-tight">Yogurt Manufacturing · 2026 (Mock)</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="pill px-3 py-1.5 rounded-lg cursor-pointer text-sm hover:brightness-110">
+          <input id="csvInput" type="file" accept=".csv" class="hidden" />
+          <span>Upload CSV</span>
+        </label>
+        <button id="resetBtn" class="pill px-3 py-1.5 rounded-lg text-sm hover:brightness-110">Reset filters</button>
+        <a href="#" id="downloadBtn" class="pill px-3 py-1.5 rounded-lg text-sm hover:brightness-110" download="dashboard-export.json">Export view</a>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="max-w-7xl mx-auto p-4 md:p-6">
+    <!-- Filters & KPIs -->
+    <section class="grid grid-cols-12 gap-4">
+      <!-- Filters panel -->
+      <aside class="col-span-12 lg:col-span-3 kpi-card p-4 lg:p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Filters</h2>
+          <span class="text-xs text-[var(--muted)]">(Power BI–style slicers)</span>
+        </div>
+        <div class="space-y-4 pr-1">
+          <div>
+            <div class="text-sm text-[var(--muted)] mb-1">Year</div>
+            <div id="yearFilters" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div>
+            <div class="text-sm text-[var(--muted)] mb-1">Plant</div>
+            <div id="plantFilters" class="scroll-y max-h-32 pr-1 space-y-2"></div>
+          </div>
+          <div>
+            <div class="text-sm text-[var(--muted)] mb-1">Style</div>
+            <div id="styleFilters" class="scroll-y max-h-32 pr-1 space-y-2"></div>
+          </div>
+          <div>
+            <div class="text-sm text-[var(--muted)] mb-1">Milk Type</div>
+            <div id="milkFilters" class="scroll-y max-h-32 pr-1 space-y-2"></div>
+          </div>
+          <div>
+            <div class="text-sm text-[var(--muted)] mb-1">Flavor</div>
+            <div id="flavorFilters" class="scroll-y max-h-40 pr-1 space-y-2"></div>
+          </div>
+          <div>
+            <div class="text-sm text-[var(--muted)] mb-1">Product / SKU search</div>
+            <input id="productSearch" class="w-full bg-transparent border border-white/10 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-cyan-300" placeholder="Type to filter…" />
+          </div>
+        </div>
+      </aside>
+
+      <!-- KPI cards + charts -->
+      <section class="col-span-12 lg:col-span-9 space-y-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="kpi-card p-4 hover-card">
+            <div class="text-sm text-[var(--muted)]">Total Volume</div>
+            <div id="kpiVol" class="text-2xl font-semibold mt-1"></div>
+          </div>
+          <div class="kpi-card p-4 hover-card">
+            <div class="text-sm text-[var(--muted)]">Avg Monthly Volume</div>
+            <div id="kpiAvgMonth" class="text-2xl font-semibold mt-1"></div>
+          </div>
+          <div class="kpi-card p-4 hover-card">
+            <div class="text-sm text-[var(--muted)]">Active Plants</div>
+            <div id="kpiPlants" class="text-2xl font-semibold mt-1"></div>
+          </div>
+          <div class="kpi-card p-4 hover-card">
+            <div class="text-sm text-[var(--muted)]">MoM Δ (last month)</div>
+            <div id="kpiMoM" class="text-2xl font-semibold mt-1"></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="kpi-card p-4 hover-card">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">Volume by Style</h3>
+              <span class="text-xs text-[var(--muted)]">(Bar, tons)</span>
+            </div>
+            <canvas id="barStyle" class="mt-3"></canvas>
+          </div>
+          <div class="kpi-card p-4 hover-card">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">Volume by Month</h3>
+              <span class="text-xs text-[var(--muted)]">(Line, tons)</span>
+            </div>
+            <canvas id="lineMonthly" class="mt-3"></canvas>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="kpi-card p-4 hover-card lg:col-span-1">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">Plant Share</h3>
+              <span class="text-xs text-[var(--muted)]">(Donut)</span>
+            </div>
+            <canvas id="donutPlant" class="mt-3"></canvas>
+          </div>
+
+          <div class="kpi-card p-4 hover-card lg:col-span-2">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold">Top SKUs (by Volume)</h3>
+              <span class="text-xs text-[var(--muted)]">(Table)</span>
+            </div>
+            <div class="scroll-y max-h-72 mt-2">
+              <table class="w-full simple-table">
+                <thead>
+                  <tr>
+                    <th class="text-left">SKU</th>
+                    <th class="text-left">Product</th>
+                    <th class="text-right">Tons</th>
+                  </tr>
+                </thead>
+                <tbody id="topProducts"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- Extra visuals row: Bubble & Waterfall -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div class="kpi-card p-4 hover-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-semibold">SKU Bubble Map</h3>
+          <span class="text-xs text-[var(--muted)]">(x: avg monthly tons, y: months active, size: total tons)</span>
+        </div>
+        <canvas id="bubbleSku" class="mt-3"></canvas>
+      </div>
+      <div class="kpi-card p-4 hover-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-semibold">Monthly Volume Waterfall</h3>
+          <span class="text-xs text-[var(--muted)]">(Start → changes → End)</span>
+        </div>
+        <canvas id="waterfallMonthly" class="mt-3"></canvas>
+      </div>
+    </div>
+
+    <!-- Plant x Month Heatmap (bubble matrix) -->
+    <div class="kpi-card p-4 hover-card mt-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold">Plant × Month Heatmap</h3>
+        <span class="text-xs text-[var(--muted)]">(rectangular cells, darker = more tons)</span>
+      </div>
+      <div class="mt-2 h-2 rounded" style="background: linear-gradient(90deg, var(--accent-4), var(--accent), var(--accent-5));"></div>
+      <div class="flex justify-between text-[10px] text-[var(--muted)] mt-1"><span>Low</span><span>High</span></div>
+      <canvas id="heatmapPlantMonth" class="mt-3"></canvas>
+    </div>
+
+    <section class="mt-8 text-sm text-[var(--muted)]">
+      <p>Tip: You can upload your own CSV to replace this mock data. Expected columns:
+      <code>Date</code> (YYYY-MM-DD), <code>Plant</code>, <code>SKU</code>, <code>Product</code>, <code>Style</code>, <code>MilkType</code>, <code>Flavor</code>, <code>VolumeTons</code>.</p>
+    </section>
+  </main>
+
+  <script>
+    // ----------------------------- Mock Data: Jan–Dec 2026 -----------------------------
+    const sampleData = (() => {
+      const months = Array.from({length:12}, (_,i)=> new Date(2026, i, 1));
+      const plants = [1,2,3,4,5].map(n=>`Plant ${n}`);
+      const styles = ["Yogurt","Skyr","Greek"];
+      const milkTypes = ["Conventional","Organic","Grass Fed"];
+      const flavors = ["Plain","Vanilla","Blueberry","Strawberry","Coffee","Chocolate"];
+
+      // Build a small SKU catalog
+      const skuCatalog = [];
+      let seq = 1;
+      function abbr(s){ return s.replace(/[^A-Z]/gi,'').slice(0,2).toUpperCase().padEnd(2,'X'); }
+      for(const st of styles){
+        for(const mt of milkTypes){
+          for(const fl of flavors){
+            if (Math.random() < 0.45) continue; // Keep catalog manageable
+            const code = `${abbr(st)}-${abbr(mt)}-${abbr(fl)}-${String(seq).padStart(3,'0')}`;
+            const name = `${fl} ${st}${Math.random()<0.35? ' (Fat Free)': ''}`;
+            skuCatalog.push({ SKU: code, Product: name, Style: st, MilkType: mt, Flavor: fl });
+            seq++;
+          }
+        }
+      }
+
+      // Generate monthly production per plant for a subset of SKUs
+      const rows = [];
+      for(const m of months){
+        for(const plant of plants){
+          const chosen = [...skuCatalog].sort(()=>Math.random()-0.5).slice(0, 8 + Math.floor(Math.random()*5));
+          for(const item of chosen){
+            const vol = +(50 + Math.random()*450).toFixed(1); // 50–500 tons
+            rows.push({
+              Date: m.toISOString().slice(0,10),
+              Plant: plant,
+              SKU: item.SKU,
+              Product: item.Product,
+              Style: item.Style,
+              MilkType: item.MilkType,
+              Flavor: item.Flavor,
+              VolumeTons: vol,
+            });
+          }
+        }
+      }
+      return rows;
+    })();
+
+    // ----------------------------- State -----------------------------
+    let rawRows = [...sampleData];
+    let filteredRows = [...rawRows];
+
+    const state = {
+      years: new Set(),
+      plants: new Set(),
+      styles: new Set(),
+      milks: new Set(),
+      flavors: new Set(),
+      productQuery: ""
+    };
+
+    // ----------------------------- Utils -----------------------------
+    const fmtTons = n => `${n.toLocaleString(undefined,{maximumFractionDigits:1})} t`;
+    const fmtNumber = n => n.toLocaleString();
+    const unique = arr => Array.from(new Set(arr));
+    function groupBy(arr, keyFn){
+      const m = new Map();
+      for(const row of arr){
+        const k = keyFn(row);
+        m.set(k, (m.get(k)||[]).concat(row));
+      }
+      return m;
+    }
+    const sum = (arr, fn) => arr.reduce((a,b)=>a+(fn?fn(b):b),0);
+    const monthKey = (dateStr) => {
+      const d = new Date(dateStr);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    };
+
+    // ----------------------------- Color helpers & Inspector -----------------------------
+    const styleColors = {
+      'Yogurt': 'rgba(255,122,217,0.7)',   // pink
+      'Skyr':   'rgba(124,255,183,0.7)',   // mint
+      'Greek':  'rgba(179,140,255,0.7)',   // purple
+    };
+    const styleBorder = {
+      'Yogurt': 'rgba(255,122,217,1)',
+      'Skyr':   'rgba(124,255,183,1)',
+      'Greek':  'rgba(179,140,255,1)',
+    };
+    function colorScale(val, min, max){
+      if(!isFinite(val)) return 'rgba(106,230,255,0.2)';
+      const t = (val-min)/(Math.max(1,max-min));
+      // interpolate mint -> cyan -> purple
+      const c1 = [124,255,183], c2=[106,230,255], c3=[179,140,255];
+      const seg = t<0.5 ? [c1,c2,(t/0.5)] : [c2,c3,((t-0.5)/0.5)];
+      const [a,b,u] = seg;
+      const rgb = a.map((av,i)=> Math.round(av + (b[i]-av)*u));
+      return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.4)`;
+    }
+    function setInspector(html){ 
+      // Function removed - no longer needed
+    }
+
+    // Crosshair plugin for line chart
+    const crosshairPlugin = {
+      id: 'crosshair',
+      afterDatasetsDraw(chart){
+        const {ctx, chartArea:{top,bottom}} = chart;
+        const active = chart._active && chart._active[0];
+        if(!active) return;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4,3]);
+        ctx.beginPath();
+        ctx.moveTo(active.element.x, top);
+        ctx.lineTo(active.element.x, bottom);
+        ctx.stroke();
+        ctx.restore();
+      }
+    };
+    Chart.register(crosshairPlugin);
+
+    // ----------------------------- Filters -----------------------------
+    function renderFilters(){
+      // Years
+      const years = unique(rawRows.map(r => new Date(r.Date).getFullYear().toString())).sort();
+      const yf = document.getElementById('yearFilters');
+      yf.innerHTML = '';
+      years.forEach(y => {
+        const active = state.years.has(y);
+        const btn = document.createElement('button');
+        btn.className = `px-3 py-1.5 rounded-lg text-sm border ${active? 'bg-white/10 border-white/20' : 'border-white/10 hover:bg-white/5'}`;
+        btn.textContent = y;
+        btn.onclick = () => { active ? state.years.delete(y) : state.years.add(y); applyFilters(); renderFilters(); };
+        yf.appendChild(btn);
+      });
+
+      // Plants
+      const plants = unique(rawRows.map(r => r.Plant)).sort();
+      const pf = document.getElementById('plantFilters');
+      pf.innerHTML = '';
+      plants.forEach(p => {
+        const id = `p_${p.replace(/\W/g,'_')}`;
+        const wrap = document.createElement('label');
+        wrap.className = 'flex items-center gap-2';
+        wrap.innerHTML = `<input type="checkbox" id="${id}" ${state.plants.has(p)?'checked':''}/> <span>${p}</span>`;
+        wrap.querySelector('input').onchange = (e)=>{ e.target.checked ? state.plants.add(p) : state.plants.delete(p); applyFilters(); };
+        pf.appendChild(wrap);
+      });
+
+      // Styles
+      const styles = unique(rawRows.map(r => r.Style)).sort();
+      const sf = document.getElementById('styleFilters');
+      sf.innerHTML = '';
+      styles.forEach(s => {
+        const id = `s_${s.replace(/\W/g,'_')}`;
+        const wrap = document.createElement('label');
+        wrap.className = 'flex items-center gap-2';
+        wrap.innerHTML = `<input type="checkbox" id="${id}" ${state.styles.has(s)?'checked':''}/> <span>${s}</span>`;
+        wrap.querySelector('input').onchange = (e)=>{ e.target.checked ? state.styles.add(s) : state.styles.delete(s); applyFilters(); };
+        sf.appendChild(wrap);
+      });
+
+      // Milk types
+      const milks = unique(rawRows.map(r => r.MilkType)).sort();
+      const mf = document.getElementById('milkFilters');
+      mf.innerHTML = '';
+      milks.forEach(m => {
+        const id = `m_${m.replace(/\W/g,'_')}`;
+        const wrap = document.createElement('label');
+        wrap.className = 'flex items-center gap-2';
+        wrap.innerHTML = `<input type="checkbox" id="${id}" ${state.milks.has(m)?'checked':''}/> <span>${m}</span>`;
+        wrap.querySelector('input').onchange = (e)=>{ e.target.checked ? state.milks.add(m) : state.milks.delete(m); applyFilters(); };
+        mf.appendChild(wrap);
+      });
+
+      // Flavors
+      const flavors = unique(rawRows.map(r => r.Flavor)).sort();
+      const ff = document.getElementById('flavorFilters');
+      ff.innerHTML = '';
+      flavors.forEach(f => {
+        const id = `f_${f.replace(/\W/g,'_')}`;
+        const wrap = document.createElement('label');
+        wrap.className = 'flex items-center gap-2';
+        wrap.innerHTML = `<input type="checkbox" id="${id}" ${state.flavors.has(f)?'checked':''}/> <span>${f}</span>`;
+        wrap.querySelector('input').onchange = (e)=>{ e.target.checked ? state.flavors.add(f) : state.flavors.delete(f); applyFilters(); };
+        ff.appendChild(wrap);
+      });
+
+      // Product search
+      const ps = document.getElementById('productSearch');
+      ps.value = state.productQuery;
+      ps.oninput = (e)=>{ state.productQuery = e.target.value.toLowerCase(); applyFilters(); };
+    }
+
+    function resetFilters(){
+      state.years.clear();
+      state.plants.clear();
+      state.styles.clear();
+      state.milks.clear();
+      state.flavors.clear();
+      state.productQuery = '';
+      applyFilters();
+      renderFilters();
+    }
+
+    // ----------------------------- Filtering -----------------------------
+    function applyFilters(){
+      filteredRows = rawRows.filter(r => {
+        const y = new Date(r.Date).getFullYear().toString();
+        if(state.years.size && !state.years.has(y)) return false;
+        if(state.plants.size && !state.plants.has(r.Plant)) return false;
+        if(state.styles.size && !state.styles.has(r.Style)) return false;
+        if(state.milks.size && !state.milks.has(r.MilkType)) return false;
+        if(state.flavors.size && !state.flavors.has(r.Flavor)) return false;
+        if(state.productQuery && !(r.Product+" "+r.SKU).toLowerCase().includes(state.productQuery)) return false;
+        return true;
+      });
+      updateAll();
+    }
+
+    // ----------------------------- KPIs -----------------------------
+    function computeKPIs(){
+      const total = sum(filteredRows, r => r.VolumeTons);
+
+      const byMonth = groupBy(filteredRows, r => monthKey(r.Date));
+      const months = Array.from(byMonth.keys()).sort();
+      const avgMonth = months.length ? (sum(months, m => sum(byMonth.get(m), r => r.VolumeTons)) / months.length) : 0;
+
+      let momStr = '—';
+      if(months.length >= 2){
+        const last = months[months.length-1], prev = months[months.length-2];
+        const vLast = sum(byMonth.get(last), r => r.VolumeTons);
+        const vPrev = sum(byMonth.get(prev), r => r.VolumeTons);
+        const pct = vPrev ? ((vLast - vPrev)/vPrev)*100 : 0;
+        const sign = pct>=0 ? '+' : '';
+        momStr = `${sign}${pct.toFixed(1)}%`;
+      }
+
+      const activePlants = unique(filteredRows.map(r=>r.Plant)).length;
+      return { total, avgMonth, momStr, activePlants };
+    }
+
+    function renderKPIs(){
+      const { total, avgMonth, momStr, activePlants } = computeKPIs();
+      document.getElementById('kpiVol').textContent = fmtTons(total);
+      document.getElementById('kpiAvgMonth').textContent = fmtTons(avgMonth);
+      document.getElementById('kpiPlants').textContent = fmtNumber(activePlants);
+      const k = document.getElementById('kpiMoM');
+      k.textContent = momStr;
+      if(momStr.startsWith('+')){ k.style.color = 'var(--good)'; }
+      else if(momStr.startsWith('-')){ k.style.color = 'var(--bad)'; }
+      else { k.style.color = 'var(--text)'; }
+    }
+
+    // ----------------------------- Charts -----------------------------
+    let barStyleChart, lineMonthlyChart, donutPlantChart, bubbleSkuChart, waterfallChart, heatmapChart;
+
+    function buildBarStyle(){
+      const byStyle = groupBy(filteredRows, r => r.Style);
+      const labels = Array.from(byStyle.keys()).sort();
+      const data = labels.map(s => sum(byStyle.get(s), r => r.VolumeTons));
+      const ctx = document.getElementById('barStyle');
+      if(barStyleChart) barStyleChart.destroy();
+      barStyleChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Tons', data }] },
+        options: {
+          plugins: { 
+            legend: { display: false }, 
+            tooltip: { mode: 'index', intersect: false }
+          },
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          responsive: true,
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.08)', drawBorder: false }, ticks: { color: 'rgba(255,255,255,0.7)' } },
+            y: { grid: { color: 'rgba(255,255,255,0.08)', drawBorder: false }, ticks: { callback: v=> v+' t', color: 'rgba(255,255,255,0.7)' } }
+          }
+        }
+      });
+    }
+
+    function buildLineMonthly(){
+      const byMonth = groupBy(filteredRows, r => monthKey(r.Date));
+      const labels = Array.from(byMonth.keys()).sort();
+      const data = labels.map(m => sum(byMonth.get(m), r => r.VolumeTons));
+      const ctx = document.getElementById('lineMonthly');
+      if(lineMonthlyChart) lineMonthlyChart.destroy();
+      lineMonthlyChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'Tons', data, tension: 0.3, fill: false, pointRadius:2 }] },
+        options: {
+          plugins: { 
+            legend: { display: false },
+            tooltip: { mode:'index', intersect:false, callbacks:{
+              title: (items)=> items[0].label,
+              footer: (items)=>{
+                const month = items[0].label; // YYYY-MM
+                const total = data[items[0].dataIndex];
+                const rows = byMonth.get(month)||[];
+                const byPlant = groupBy(rows, r=>r.Plant);
+                const top = Array.from(byPlant.entries()).map(([p,rs])=>[p, sum(rs, r=>r.VolumeTons)]).sort((a,b)=>b[1]-a[1]).slice(0,3);
+                return 'Top plants: '+ top.map(([p,v])=> `${p} ${v.toFixed(1)}t`).join(', ');
+              }
+            }}
+          },
+          interaction: { mode:'index', intersect:false },
+          responsive: true,
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.08)', drawBorder: false }, ticks: { color: 'rgba(255,255,255,0.7)' } },
+            y: { grid: { color: 'rgba(255,255,255,0.08)', drawBorder: false }, ticks: { callback: v=> v+' t', color: 'rgba(255,255,255,0.7)' } }
+          },
+          onHover: (e, actives)=>{
+            // Hover functionality removed
+          }
+        }
+      });
+    }
+
+    function buildDonutPlant(){
+      const byPlant = groupBy(filteredRows, r => r.Plant);
+      const labels = Array.from(byPlant.keys()).sort();
+      const values = labels.map(p => sum(byPlant.get(p), r2 => r2.VolumeTons));
+      const max = Math.max(...values);
+      const min = Math.min(...values);
+      const colors = values.map(v=> colorScale(v,min,max));
+      const ctx = document.getElementById('donutPlant');
+      if(donutPlantChart) donutPlantChart.destroy();
+      donutPlantChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+        options: { 
+          plugins: { legend: { position: 'bottom', labels: { color: '#e7e9f5' } } }, 
+          cutout: '60%',
+          onHover: (e, actives)=>{ 
+            // Hover functionality removed
+          }
+        }
+      });
+    }
+
+    // ----------------------------- Extra Visuals -----------------------------
+    function buildBubbleSKUs(){
+      const bySKU = groupBy(filteredRows, r => r.SKU);
+      const points = [];
+      for(const [sku, rows] of bySKU.entries()){
+        const total = sum(rows, r=>r.VolumeTons);
+        const months = unique(rows.map(r=>monthKey(r.Date))).length;
+        const avgMonthly = months ? total/months : 0;
+        const sample = rows[0] || {};
+        const label = sample.Product || sku;
+        const style = sample.Style || 'Yogurt';
+        points.push({ x: +avgMonthly.toFixed(1), y: months, r: Math.max(4, Math.min(18, total/200)), sku, label, style, total: +total.toFixed(1) });
+      }
+      points.sort((a,b)=> b.r - a.r);
+      const ctx = document.getElementById('bubbleSku');
+      if(bubbleSkuChart) bubbleSkuChart.destroy();
+      bubbleSkuChart = new Chart(ctx, {
+        type: 'bubble',
+        data: { datasets: [{ label: 'SKUs', data: points, parsing:false, 
+                              backgroundColor: (c)=> styleColors[c.raw.style]||'rgba(106,230,255,0.5)',
+                              borderColor: (c)=> styleBorder[c.raw.style]||'rgba(106,230,255,0.95)', borderWidth:1 }] },
+        options: {
+          scales: {
+            x: { title:{ display:true, text:'Avg monthly tons', color: 'rgba(255,255,255,0.8)' }, grid:{ color:'rgba(255,255,255,0.08)', drawBorder: false }, ticks: { color: 'rgba(255,255,255,0.7)' } },
+            y: { title:{ display:true, text:'Months active', color: 'rgba(255,255,255,0.8)' }, grid:{ color:'rgba(255,255,255,0.08)', drawBorder: false }, ticks:{ stepSize:1, precision:0, color: 'rgba(255,255,255,0.7)' } }
+          },
+          plugins: { 
+            legend:{ display:false },
+            tooltip:{ callbacks:{ 
+              label: ctx => `${ctx.raw.label} • ${ctx.raw.sku}\n${ctx.raw.style} • Total ${ctx.raw.total} t\n${ctx.raw.x} t/mo · ${ctx.raw.y} mo`
+            } }
+          },
+          onHover: (e, actives)=>{ 
+            e.native.target.style.cursor = actives.length? 'pointer':'default';
+            // Hover functionality removed
+          }
+        }
+      });
+    }
+
+    function buildWaterfallMonthly(){
+      const byMonth = groupBy(filteredRows, r => monthKey(r.Date));
+      const labels = Array.from(byMonth.keys()).sort();
+      if(labels.length===0){ if(waterfallChart) waterfallChart.destroy(); return; }
+      const monthlyTotals = labels.map(m => sum(byMonth.get(m), r => r.VolumeTons));
+      const diffs = monthlyTotals.map((v,i)=> i===0? v : v - monthlyTotals[i-1]);
+      const cum = monthlyTotals.map((v,i)=> monthlyTotals.slice(0,i+1).reduce((a,b)=>a+b,0));
+      const base = labels.map((_,i)=> i===0? 0 : cum[i-1]);
+      const change = labels.map((_,i)=> i===labels.length-1? cum[i] : (i===0? cum[0] : cum[i]-cum[i-1]));
+      const colors = labels.map((_,i)=> i===0||i===labels.length-1? 'rgba(106,230,255,0.9)' : (diffs[i]>=0? 'rgba(124,255,183,0.9)' : 'rgba(239,68,68,0.9)'));
+
+      const ctx = document.getElementById('waterfallMonthly');
+      if(waterfallChart) waterfallChart.destroy();
+      waterfallChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [
+          { label:'Base', data: base, backgroundColor:'rgba(0,0,0,0)', stack:'wf', borderSkipped:false },
+          { label:'Change', data: change, backgroundColor: colors, stack:'wf', borderRadius:6, borderSkipped:false }
+        ]},
+        options: {
+          plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: (ctx)=> `${ctx.datasetIndex===0? 'Base':'Δ'}: ${ctx.parsed.y.toLocaleString()} t` } } },
+          scales: { x: { grid:{ color:'rgba(255,255,255,0.08)', drawBorder: false }, ticks: { color: 'rgba(255,255,255,0.7)' } }, y: { grid:{ color:'rgba(255,255,255,0.08)', drawBorder: false }, ticks:{ callback:v=> v+' t', color: 'rgba(255,255,255,0.7)' } } },
+          responsive:true,
+          onHover: (e, actives)=>{ 
+            // Hover functionality removed
+          }
+        }
+      });
+    }
+
+    // ----------------------------- Heatmap (bubble matrix) -----------------------------
+    function buildHeatmap(){
+      const byMonth = groupBy(filteredRows, r => monthKey(r.Date));
+      const months = Array.from(byMonth.keys()).sort();
+      const plants = unique(filteredRows.map(r=>r.Plant)).sort();
+
+      // Build matrix of cells {x: month, y: plant, v}
+      const cells = [];
+      let min = Infinity, max = -Infinity;
+      for(const plant of plants){
+        for(const month of months){
+          const rows = (byMonth.get(month)||[]).filter(r=> r.Plant===plant);
+          const v = sum(rows, r=>r.VolumeTons);
+          min = Math.min(min, v); max = Math.max(max, v);
+          cells.push({ x: month, y: plant, v });
+        }
+      }
+      const ctx = document.getElementById('heatmapPlantMonth');
+      if(heatmapChart) heatmapChart.destroy();
+      heatmapChart = new Chart(ctx, {
+        type: 'matrix',
+        data: { datasets: [{
+          label: 'Tons',
+          data: cells,
+          parsing: false,
+          backgroundColor: (c)=> colorScale(c.raw.v, min, max),
+          borderWidth: 1,
+          borderColor: (c)=> {
+            const t = (c.raw.v-min)/(Math.max(1,max-min));
+            const c1 = [124,255,183], c2=[106,230,255], c3=[179,140,255];
+            const seg = t<0.5 ? [c1,c2,(t/0.5)] : [c2,c3,((t-0.5)/0.5)];
+            const [a,b,u] = seg;
+            const rgb = a.map((av,i)=> Math.round(av + (b[i]-av)*u));
+            return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.3)`;
+          },
+          borderRadius: 8,
+          width: ({chart}) => {
+            const w = chart.chartArea ? (chart.chartArea.right - chart.chartArea.left) / Math.max(1, months.length) : 20; 
+            return Math.max(6, w - 4);
+          },
+          height: ({chart}) => {
+            const h = chart.chartArea ? (chart.chartArea.bottom - chart.chartArea.top) / Math.max(1, plants.length) : 20; 
+            return Math.max(6, h - 4);
+          }
+        }]},
+        options: {
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx)=> `${ctx.raw.y} • ${ctx.raw.x}: ${ctx.raw.v.toFixed(1)} t` } }
+          },
+          scales: {
+            x: { type:'category', labels: months, grid: { color:'rgba(255,255,255,0.08)', drawBorder: false }, title:{ display:true, text:'Month', color: 'rgba(255,255,255,0.8)' }, ticks: { color: 'rgba(255,255,255,0.7)' } },
+            y: { type:'category', labels: plants, reverse:true, grid: { color:'rgba(255,255,255,0.08)', drawBorder: false }, title:{ display:true, text:'Plant', color: 'rgba(255,255,255,0.8)' }, ticks: { color: 'rgba(255,255,255,0.7)' } }
+          },
+          onHover: (e, actives)=>{
+            e.native.target.style.cursor = actives.length? 'pointer':'default';
+            // Hover functionality removed
+          }
+        }
+      });
+    }
+
+    // ----------------------------- Top SKUs table -----------------------------
+    function renderTopProducts(){
+      const bySKU = groupBy(filteredRows, r => r.SKU);
+      const rows = Array.from(bySKU.entries()).map(([sku, rows]) => {
+        const tons = sum(rows, r => r.VolumeTons);
+        const product = rows[0]?.Product || '';
+        return { sku, product, tons };
+      }).sort((a,b)=> b.tons - a.tons).slice(0, 12);
+
+      const tbody = document.getElementById('topProducts');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.sku}</td>
+          <td>${r.product}</td>
+          <td class="text-right">${r.tons.toFixed(1)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ----------------------------- Upload / Export -----------------------------
+    function parseCSVToRows(csv){
+      // Expect: Date, Plant, SKU, Product, Style, MilkType, Flavor, VolumeTons
+      const parsed = Papa.parse(csv, { header: true, dynamicTyping: true, skipEmptyLines: true });
+      const cols = parsed.meta.fields || [];
+      const required = ["Date","Plant","SKU","Product","Style","MilkType","Flavor","VolumeTons"];
+      const ok = required.every(c => cols.includes(c));
+      if(!ok) throw new Error(`CSV must include columns: ${required.join(', ')}`);
+      const rows = parsed.data.map(r => ({
+        Date: new Date(r.Date).toISOString().slice(0,10),
+        Plant: String(r.Plant),
+        SKU: String(r.SKU),
+        Product: String(r.Product),
+        Style: String(r.Style),
+        MilkType: String(r.MilkType),
+        Flavor: String(r.Flavor),
+        VolumeTons: Number(r.VolumeTons)||0,
+      }));
+      return rows;
+    }
+
+    document.getElementById('csvInput').addEventListener('change', (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const rows = parseCSVToRows(reader.result);
+          rawRows = rows;
+          resetFilters();
+          applyFilters();
+          renderFilters();
+        }catch(err){ alert(err.message); }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', (e)=>{
+      const blob = new Blob([JSON.stringify(filteredRows,null,2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      e.target.href = url;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetFilters);
+
+    // ----------------------------- Update all -----------------------------
+    function updateAll(){
+      renderKPIs();
+      buildBarStyle();
+      buildLineMonthly();
+      buildDonutPlant();
+      buildBubbleSKUs();
+      buildWaterfallMonthly();
+      buildHeatmap();
+      renderTopProducts();
+    }
+
+    // ----------------------------- Self-tests (basic) -----------------------------
+    (function selfTests(){
+      try {
+        console.assert(monthKey('2026-02-15')==='2026-02', 'monthKey failed');
+        console.assert(sum([1,2,3], x=>x)===6, 'sum failed');
+        console.assert(typeof colorScale(10,0,100)==='string', 'colorScale failed');
+        console.log('[Dashboard] Basic self-tests passed');
+      } catch(e){ console.warn('[Dashboard] Self-test issue', e); }
+    })();
+
+    // ----------------------------- Init -----------------------------
+    renderFilters();
+    applyFilters();
+  </script>
+</body>
+</html>

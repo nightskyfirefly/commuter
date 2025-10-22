@@ -1,150 +1,64 @@
-# Commute Cost Calculator - Interactive Showcase
+# EV Charging Stations Dashboard
 
-This showcase page demonstrates the Commute Cost Calculator application in an interactive, professional presentation format.
-
-## Overview
-
-The showcase (`showcase/index.html`) is a standalone HTML page that:
-
-- **Embeds the main application** via iframe
-- **Highlights key features** with visual cards and icons
-- **Provides demo instructions** and pro tips
-- **Shows technical details** about the implementation
-- **Offers smooth navigation** and professional styling
+An interactive dashboard showing electric vehicle charging stations across the United States.
 
 ## Features
 
-### 🎨 Professional Design
-- Gradient backgrounds and modern styling
-- Hover effects and smooth transitions
-- Responsive design for all screen sizes
-- Lucide icons for visual appeal
+- **Interactive Map**: Visualize EV charging stations on a US map
+- **Real-time Filtering**: Filter by state, access type (public/private), and charging cost (free/paid)
+- **Live Statistics**: Dynamic counters showing total stations, public stations, free stations, and states covered
+- **Responsive Design**: Works on desktop and mobile devices
+- **Modern UI**: Beautiful dark theme with glowing effects
 
-### 📱 Interactive Elements
-- Smooth scrolling navigation
-- Feature cards with hover effects
-- Demo instructions and pro tips
-- Technical stack visualization
+## Quick Start
 
-### 🔗 App Integration
-- Embeds the main app via iframe
-- Robust connection checking before loading
-- Graceful error handling if app isn't running
-- Static demo fallback when app is unavailable
-- "Try Again" functionality for easy retry
-- Clear instructions for starting the development server
+### Option 1: Demo Mode (Limited Data)
+Simply open `ev_dashboard_dynamic.html` in your web browser. This will show a sample dataset with ~50 stations for demonstration purposes.
 
-## Usage
+### Option 2: Full Dataset (Recommended)
+For the complete dataset with 80,000+ stations:
 
-### Quick Start
-1. **Start the main app**: Run `npm run dev` in the project root
-2. **Open the showcase**: Open `showcase/index.html` in your browser
-3. **Explore**: Navigate through the features and try the embedded app
+1. **Using Python** (if installed):
+   ```bash
+   cd v2/showcase
+   python -m http.server
+   ```
+   Then open: http://localhost:8000/ev_dashboard_dynamic.html
 
-### Standalone Usage
-The showcase can also be used independently:
-- Open `showcase/index.html` directly in a browser
-- Shows the app interface and feature descriptions
-- Provides instructions for running the full application
-- Includes a static demo when the app isn't running
-- Offers "Try Again" functionality to reconnect to the app
+2. **Using the batch file** (Windows):
+   Double-click `start-server.bat` in the showcase folder
 
-## Sections
+3. **Using Node.js** (if installed):
+   ```bash
+   cd v2/showcase
+   npx http-server
+   ```
 
-### 1. Hero Section
-- Eye-catching gradient background
-- Clear value proposition
-- Call-to-action buttons
+## Data Source
 
-### 2. Features Section
-Six key features highlighted with:
-- Visual icons
-- Descriptive text
-- Hover animations
-
-### 3. Demo Section
-- Embedded application iframe
-- Demo route suggestions
-- Pro tips for users
-
-### 4. Technical Details
-- Technology stack overview
-- Implementation highlights
-- Modern development practices
-
-### 5. Footer
-- Contact information
-- Social links
-- Professional branding
-
-## Customization
-
-### Styling
-- Uses Tailwind CSS via CDN
-- Custom CSS for gradients and animations
-- Easy to modify colors and layouts
-
-### Content
-- Feature descriptions can be updated
-- Demo routes can be customized
-- Technical details can be expanded
-
-### Integration
-- Iframe source can be changed for production
-- Error handling can be customized
-- Additional sections can be added
+The dashboard uses data from `ev_stations_clean.csv` which contains:
+- Latitude and longitude coordinates
+- State and county information
+- Access type (public/private)
+- Free/paid charging status
+- Station details for hover tooltips
 
 ## Technical Details
 
-### Dependencies
-- **Tailwind CSS**: Via CDN for styling
-- **Lucide Icons**: Via CDN for icons
-- **Vanilla JavaScript**: For interactions
+- **Plotly.js**: Version 2.35.2 for interactive mapping
+- **Responsive Design**: CSS Grid layout with mobile sidebar
+- **CORS Handling**: Graceful fallback to sample data when CSV can't be loaded
+- **Performance**: Efficient filtering and rendering for large datasets
 
-### Browser Support
-- Modern browsers with ES6 support
-- Responsive design for mobile devices
-- Graceful degradation for older browsers
+## Browser Compatibility
 
-### Performance
-- Lightweight standalone HTML file
-- CDN resources for fast loading
-- Optimized images and animations
+- Chrome/Edge: Full support
+- Firefox: Full support  
+- Safari: Full support
+- Mobile browsers: Responsive design supported
 
-## Deployment
+## Troubleshooting
 
-### Local Development
-- Serve alongside the main Next.js app
-- Access via file:// protocol or local server
+**CORS Error**: If you see a CORS error, it means you're opening the HTML file directly. Use one of the server options above to serve the files properly.
 
-### Production
-- Deploy to any static hosting service
-- Update iframe source to production URL
-- Consider CORS policies for iframe embedding
-
-### Integration
-- Can be embedded in other websites
-- Suitable for portfolio presentations
-- Professional demo for stakeholders
-
-## Future Enhancements
-
-### Planned Features
-- [ ] Interactive feature demonstrations
-- [ ] Video tutorials embedded
-- [ ] Live data examples
-- [ ] Mobile app preview
-- [ ] API documentation integration
-
-### Potential Improvements
-- [ ] Dark mode toggle
-- [ ] Multiple language support
-- [ ] Accessibility improvements
-- [ ] Performance optimizations
-- [ ] SEO enhancements
-
----
-
-**Created**: 2024-12-19  
-**Purpose**: Interactive showcase and demonstration  
-**Technology**: HTML, CSS, JavaScript, Tailwind CSS
+**No Data Loading**: Ensure `ev_stations_clean.csv` is in the same directory as the HTML file when using a local server.

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Stations — Dynamic Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #030c18 0%, #0a1a2e 50%, #16213e 100%);
+            color: #dbe7ff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        .sidebar {
+            background: rgba(11, 26, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(27, 58, 90, 0.3);
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar p {
+            color: #8fa3b8;
+            font-size: 14px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .filter-group {
+            margin-bottom: 24px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #a8b8d0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+            width: 100%;
+            background: rgba(17, 42, 68, 0.8);
+            border: 1px solid rgba(27, 58, 90, 0.5);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #dbe7ff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+            background: rgba(17, 42, 68, 0.9);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: rgba(17, 42, 68, 0.6);
+            border: 1px solid rgba(27, 58, 90, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #8fa3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .map-container {
+            position: relative;
+            background: #030c18;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(3, 12, 24, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 215, 0, 0.2);
+            border-top: 3px solid #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #dbe7ff;
+            text-align: center;
+        }
+
+        .glow-effect {
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) 
+                    drop-shadow(0 0 16px rgba(255, 215, 0, 0.4))
+                    drop-shadow(0 0 24px rgba(255, 215, 0, 0.2));
+        }
+
+        .pulse-effect {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .tooltip {
+            background: rgba(11, 26, 42, 0.95);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: #dbe7ff;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .responsive-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(11, 26, 42, 0.9);
+            border: 1px solid rgba(27, 58, 90, 0.5);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #dbe7ff;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -300px;
+                width: 300px;
+                height: 100vh;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.open {
+                left: 0;
+            }
+            
+            .responsive-toggle {
+                display: block;
+            }
+            
+            .map-container {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="responsive-toggle" onclick="toggleSidebar()">
+        ☰ Filters
+    </div>
+
+    <div class="dashboard-container">
+        <div class="sidebar" id="sidebar">
+            <h1>EV Charging Stations</h1>
+            <p>Interactive dashboard showing electric vehicle charging stations across the United States</p>
+            <div id="cors-warning" style="display: none; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #ffc107;">
+                <strong>Demo Mode:</strong> For full functionality with all 80,000+ stations, serve this file through a local server:<br>
+                <code style="background: rgba(0,0,0,0.2); padding: 2px 4px; border-radius: 4px;">python -m http.server</code>
+            </div>
+            
+            <div class="filter-group">
+                <label for="stateFilter">State</label>
+                <select id="stateFilter" class="filter-select">
+                    <option value="">All States</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="accessFilter">Access Type</label>
+                <select id="accessFilter" class="filter-select">
+                    <option value="">All Access Types</option>
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="freeFilter">Free Charging</label>
+                <select id="freeFilter" class="filter-select">
+                    <option value="">All Charging Types</option>
+                    <option value="true">Free</option>
+                    <option value="false">Paid</option>
+                </select>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalStations">-</div>
+                    <div class="stat-label">Total Stations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="publicStations">-</div>
+                    <div class="stat-label">Public</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="freeStations">-</div>
+                    <div class="stat-label">Free</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statesCount">-</div>
+                    <div class="stat-label">States</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div>
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading EV charging stations...</div>
+                </div>
+            </div>
+            <div id="map" style="width: 100%; height: 100vh;"></div>
+        </div>
+    </div>
+
+    <script>
+        let allStations = [];
+        let filteredStations = [];
+        let currentPlot = null;
+
+        // Load CSV data
+        async function loadStationData() {
+            try {
+                // Try to load from local file first, fallback to embedded data if CORS fails
+                let csvText;
+                try {
+                    const response = await fetch('ev_stations_clean.csv');
+                    csvText = await response.text();
+                } catch (corsError) {
+                    console.warn('CORS error loading CSV file. Please serve this HTML file through a local server (e.g., python -m http.server) for full functionality.');
+                    // Show warning message
+                    document.getElementById('cors-warning').style.display = 'block';
+                    // For demo purposes, we'll create a small sample dataset
+                    csvText = createSampleData();
+                }
+                
+                const lines = csvText.split('\n');
+                
+                allStations = [];
+                const states = new Set();
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const [lat, lon, state, county, access, isFree, hover] = line.split(',');
+                    
+                    if (lat && lon && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lon))) {
+                        const station = {
+                            lat: parseFloat(lat),
+                            lon: parseFloat(lon),
+                            state: state || 'Unknown',
+                            county: county || 'Unknown',
+                            access: access || 'unknown',
+                            isFree: isFree === 'True',
+                            hover: hover || 'Unknown Station'
+                        };
+                        
+                        allStations.push(station);
+                        if (state) states.add(state);
+                    }
+                }
+                
+                filteredStations = [...allStations];
+                
+                // Populate state filter
+                const stateFilter = document.getElementById('stateFilter');
+                const sortedStates = Array.from(states).sort();
+                sortedStates.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state;
+                    option.textContent = state;
+                    stateFilter.appendChild(option);
+                });
+                
+                updateStats();
+                createMap();
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error loading station data:', error);
+                hideLoading();
+            }
+        }
+
+        // Create sample data for demo purposes when CSV can't be loaded
+        function createSampleData() {
+            return `lat,lon,state,county,access,is_free,hover
+34.2483191527193,-118.3879713743439,CA,,private,False,"<b>LADWP - Truesdale Center</b><br>Sun Valley, CA<br>Access: Private<br>Free: No"
+34.040539,-118.271387,CA,,public,True,"<b>Los Angeles Convention Center</b><br>Los Angeles, CA<br>Access: Public<br>Free: Yes"
+34.059133,-118.248589,CA,,private,False,"<b>LADWP - John Ferraro Building</b><br>Los Angeles, CA<br>Access: Private<br>Free: No"
+33.759802,-118.096665,CA,,private,False,"<b>LADWP - Haynes Power Plant</b><br>Long Beach, CA<br>Access: Private<br>Free: No"
+33.770508,-118.265628,CA,,private,False,"<b>LADWP - Harbor Generating Station</b><br>Wilmington, CA<br>Access: Private<br>Free: No"
+34.30309,-118.480505,CA,,private,True,"<b>LADWP - Sylmar West</b><br>Sylmar, CA<br>Access: Private<br>Free: Yes"
+34.066801,-118.227605,CA,,private,False,"<b>LADWP - EV Service Center</b><br>Los Angeles, CA<br>Access: Private<br>Free: No"
+34.036777,-118.368841,CA,,private,True,"<b>LADWP - Fairfax Center</b><br>Los Angeles, CA<br>Access: Private<br>Free: Yes"
+34.039736,-118.236065,CA,,private,False,"<b>LADWP - Palmetto Center</b><br>Los Angeles, CA<br>Access: Private<br>Free: No"
+32.89947,-117.243,CA,,public,True,"<b>Scripps Green Hospital</b><br>La Jolla, CA<br>Access: Public<br>Free: Yes"
+34.221665,-118.468371,CA,,public,True,"<b>Galpin Motors</b><br>Sepulveda, CA<br>Access: Public<br>Free: Yes"
+33.909914,-117.459053,CA,,public,True,"<b>Galleria at Tyler</b><br>Riverside, CA<br>Access: Public<br>Free: Yes"
+34.14762,-118.147111,CA,,public,True,"<b>City of Pasadena - Holly Street Garage</b><br>Pasadena, CA<br>Access: Public<br>Free: Yes"
+34.145138,-118.152655,CA,,public,True,"<b>City of Pasadena - De Lacey Garage</b><br>Pasadena, CA<br>Access: Public<br>Free: Yes"
+34.145119,-118.150133,CA,,public,False,"<b>City of Pasadena - Schoolhouse Garage</b><br>Pasadena, CA<br>Access: Public<br>Free: No"
+34.118433,-118.149597,CA,,public,True,"<b>Bristol Farms</b><br>South Pasadena, CA<br>Access: Public<br>Free: Yes"
+33.7637,-118.192,CA,,public,True,"<b>Hyatt Regency Long Beach</b><br>Long Beach, CA<br>Access: Public<br>Free: Yes"
+33.94325,-118.403342,CA,,public,False,"<b>Los Angeles International Airport (LAX) - Lot 6</b><br>Los Angeles, CA<br>Access: Public<br>Free: No"
+34.238716,-118.554686,CA,,public,False,"<b>Northridge Fashion Center East Garage Lower Level</b><br>Northridge, CA<br>Access: Public<br>Free: No"
+34.228315,-119.170865,CA,,public,True,"<b>Courtyard Marriott - Oxnard Ventura</b><br>Oxnard, CA<br>Access: Public<br>Free: Yes"
+33.824004,-116.543589,CA,,public,True,"<b>Hilton - Palm Springs</b><br>Palm Springs, CA<br>Access: Public<br>Free: Yes"
+34.0189,-117.38,CA,,public,True,"<b>Inland Empire Foods</b><br>Riverside, CA<br>Access: Public<br>Free: Yes"
+38.69005,-121.58889,CA,,public,False,"<b>Sacramento International Airport - Daily A Lot</b><br>Sacramento, CA<br>Access: Public<br>Free: No"
+34.017081,-118.44704,CA,,public,True,"<b>City of Santa Monica - Airport</b><br>Santa Monica, CA<br>Access: Public<br>Free: Yes"
+34.010021,-118.49583,CA,,public,True,"<b>City of Santa Monica - Pier</b><br>Santa Monica, CA<br>Access: Public<br>Free: Yes"
+34.156407,-118.438965,CA,,public,False,"<b>Westfield Parking Garage 1st Floor</b><br>Sherman Oaks, CA<br>Access: Public<br>Free: No"
+34.13722,-118.35835,CA,,public,True,"<b>Universal City Hilton</b><br>Universal City, CA<br>Access: Public<br>Free: Yes"
+33.94756,-118.153806,CA,,public,True,"<b>Office Max - Home Depot</b><br>Downey, CA<br>Access: Public<br>Free: Yes"
+37.80619,-122.4152,CA,,public,True,"<b>Hyatt at Fisherman's Wharf</b><br>San Francisco, CA<br>Access: Public<br>Free: Yes"
+38.599693,-121.427045,CA,,public,True,"<b>Arden Fair Mall</b><br>Sacramento, CA<br>Access: Public<br>Free: Yes"
+37.78881,-122.401,CA,,public,False,"<b>Palace Hotel</b><br>San Francisco, CA<br>Access: Public<br>Free: No"
+37.791791,-122.411265,CA,,public,False,"<b>Mark Hopkins InterContinental Hotel</b><br>San Francisco, CA<br>Access: Public<br>Free: No"
+34.248959,-118.523887,CA,,public,True,"<b>California State University - Northridge</b><br>Northridge, CA<br>Access: Public<br>Free: Yes"
+34.241687,-118.528543,CA,,public,True,"<b>California State University - Northridge</b><br>Northridge, CA<br>Access: Public<br>Free: Yes"
+34.236853,-118.532588,CA,,public,True,"<b>California State University - Northridge</b><br>Northridge, CA<br>Access: Public<br>Free: Yes"
+33.740758,-118.28192,CA,,public,True,"<b>Los Angeles Harbor Department Headquarters</b><br>San Pedro, CA<br>Access: Public<br>Free: Yes"
+34.077588,-118.474585,CA,,public,True,"<b>Getty Center</b><br>Los Angeles, CA<br>Access: Public<br>Free: Yes"
+34.145528,-118.050548,CA,,public,False,"<b>LA County DPR Arboretum</b><br>Arcadia, CA<br>Access: Public<br>Free: No"
+34.13556,-117.864,CA,,public,True,"<b>City of Glendora - City Hall</b><br>Glendora, CA<br>Access: Public<br>Free: Yes"
+33.9826,-118.3966,CA,,public,False,"<b>DoubleTree Hotel - Los Angeles - Westside</b><br>Culver City, CA<br>Access: Public<br>Free: No"
+34.029971,-118.385231,CA,,public,False,"<b>Helms Bakery Building</b><br>Los Angeles, CA<br>Access: Public<br>Free: No"
+33.777054,-117.870566,CA,,public,True,"<b>Westfield MainPlace Mall</b><br>Santa Ana, CA<br>Access: Public<br>Free: Yes"
+34.16657601660278,-119.045854662704,CA,,public,True,"<b>California State University - Channel Islands</b><br>Camarillo, CA<br>Access: Public<br>Free: Yes"
+33.919899,-117.898618,CA,,public,False,"<b>Brea Downtown Parking</b><br>Brea, CA<br>Access: Public<br>Free: No"
+34.192178,-118.934793,CA,,public,True,"<b>Home Depot</b><br>Newbury Park, CA<br>Access: Public<br>Free: Yes"
+34.418322,-119.3368,CA,,public,False,"<b>Lake Casitas Municipal Water District - Recreational Area</b><br>Oak View, CA<br>Access: Public<br>Free: No"
+34.105275,-117.809208,CA,,public,True,"<b>San Dimas Park & Ride</b><br>San Dimas, CA<br>Access: Public<br>Free: Yes"
+34.267352,-119.2124,CA,,public,False,"<b>Ventura County Government Center</b><br>Ventura, CA<br>Access: Public<br>Free: No"
+34.268756,-119.2154,CA,,public,True,"<b>Ventura County Air Pollution Control District</b><br>Ventura, CA<br>Access: Public<br>Free: Yes"
+40.7128,-74.0060,NY,,public,True,"<b>Times Square Station</b><br>New York, NY<br>Access: Public<br>Free: Yes"
+40.7589,-73.9851,NY,,public,False,"<b>Central Park Station</b><br>New York, NY<br>Access: Public<br>Free: No"
+40.7505,-73.9934,NY,,private,True,"<b>Empire State Building</b><br>New York, NY<br>Access: Private<br>Free: Yes"
+41.8781,-87.6298,IL,,public,True,"<b>Millennium Park</b><br>Chicago, IL<br>Access: Public<br>Free: Yes"
+41.8819,-87.6278,IL,,public,False,"<b>Navy Pier</b><br>Chicago, IL<br>Access: Public<br>Free: No"
+29.7604,-95.3698,TX,,public,True,"<b>Houston Downtown</b><br>Houston, TX<br>Access: Public<br>Free: Yes"
+29.4241,-98.4936,TX,,private,False,"<b>San Antonio Airport</b><br>San Antonio, TX<br>Access: Private<br>Free: No"
+33.4484,-112.0740,AZ,,public,True,"<b>Phoenix Convention Center</b><br>Phoenix, AZ<br>Access: Public<br>Free: Yes"
+33.4152,-111.8315,AZ,,public,False,"<b>Tempe Marketplace</b><br>Tempe, AZ<br>Access: Public<br>Free: No"
+39.7392,-104.9903,CO,,public,True,"<b>Denver Union Station</b><br>Denver, CO<br>Access: Public<br>Free: Yes"
+39.7392,-104.9903,CO,,private,True,"<b>Denver Tech Center</b><br>Denver, CO<br>Access: Private<br>Free: Yes"`;
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function updateStats() {
+            const total = filteredStations.length;
+            const public = filteredStations.filter(s => s.access === 'public').length;
+            const free = filteredStations.filter(s => s.isFree).length;
+            const states = new Set(filteredStations.map(s => s.state)).size;
+            
+            document.getElementById('totalStations').textContent = total.toLocaleString();
+            document.getElementById('publicStations').textContent = public.toLocaleString();
+            document.getElementById('freeStations').textContent = free.toLocaleString();
+            document.getElementById('statesCount').textContent = states;
+        }
+
+        function createMap() {
+            const lats = filteredStations.map(s => s.lat);
+            const lons = filteredStations.map(s => s.lon);
+            const hovers = filteredStations.map(s => s.hover);
+            const colors = filteredStations.map(s => s.isFree ? '#ffd700' : '#ff6b35');
+            const sizes = filteredStations.map(s => s.isFree ? 8 : 6);
+
+            const trace = {
+                type: 'scattergeo',
+                mode: 'markers',
+                lat: lats,
+                lon: lons,
+                text: hovers,
+                hoverinfo: 'text',
+                marker: {
+                    size: sizes,
+                    color: colors,
+                    opacity: 0.8,
+                    line: {
+                        width: 1,
+                        color: '#ffffff'
+                    }
+                },
+                name: 'EV Charging Stations'
+            };
+
+            const layout = {
+                geo: {
+                    scope: 'usa',
+                    projection: {
+                        type: 'albers usa'
+                    },
+                    bgcolor: 'rgba(3, 12, 24, 0.8)',
+                    showland: true,
+                    landcolor: 'rgba(4, 18, 36, 0.8)',
+                    showlakes: true,
+                    lakecolor: 'rgba(5, 20, 40, 0.8)',
+                    showocean: true,
+                    oceancolor: 'rgba(3, 12, 24, 0.8)',
+                    coastlinecolor: 'rgba(20, 40, 80, 0.8)',
+                    subunitcolor: 'rgba(25, 50, 100, 0.8)',
+                    countrycolor: 'rgba(25, 50, 100, 0.8)',
+                    showframe: false,
+                    showcoastlines: true,
+                    showcountries: true,
+                    showstates: true,
+                    lonaxis: {
+                        range: [-180, -50]
+                    },
+                    lataxis: {
+                        range: [20, 80]
+                    }
+                },
+                paper_bgcolor: 'rgba(3, 12, 24, 0.8)',
+                plot_bgcolor: 'rgba(3, 12, 24, 0.8)',
+                margin: {
+                    l: 0,
+                    r: 0,
+                    t: 0,
+                    b: 0
+                },
+                showlegend: false,
+                hovermode: 'closest'
+            };
+
+            const config = {
+                displayModeBar: false,
+                responsive: true,
+                staticPlot: false
+            };
+
+            Plotly.newPlot('map', [trace], layout, config).then(() => {
+                // Add custom CSS for glowing effect
+                const plotlyContainer = document.querySelector('.plotly');
+                if (plotlyContainer) {
+                    plotlyContainer.style.filter = 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.3))';
+                }
+            });
+        }
+
+        function applyFilters() {
+            const stateFilter = document.getElementById('stateFilter').value;
+            const accessFilter = document.getElementById('accessFilter').value;
+            const freeFilter = document.getElementById('freeFilter').value;
+
+            filteredStations = allStations.filter(station => {
+                const stateMatch = !stateFilter || station.state === stateFilter;
+                const accessMatch = !accessFilter || station.access === accessFilter;
+                const freeMatch = !freeFilter || station.isFree.toString() === freeFilter;
+                
+                return stateMatch && accessMatch && freeMatch;
+            });
+
+            updateStats();
+            createMap();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Event listeners
+        document.getElementById('stateFilter').addEventListener('change', applyFilters);
+        document.getElementById('accessFilter').addEventListener('change', applyFilters);
+        document.getElementById('freeFilter').addEventListener('change', applyFilters);
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.responsive-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggle.contains(e.target) && 
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadStationData);
+    </script>
+</body>
+</html>
