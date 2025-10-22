@@ -248,7 +248,7 @@
                     <div class="text-center py-12">
                         <div class="cyber-loader mx-auto mb-4"></div>
                         <p class="text-gray-400 uppercase tracking-wider">INITIALIZING SYSTEM...</p>
-                        <p class="text-sm text-gray-500 mt-2">If the app doesn't load, make sure the Next.js development server is running on localhost:3000</p>
+                        <p class="text-sm text-gray-500 mt-2" id="loading-message">Loading application...</p>
                     </div>
                 </div>
             </div>
@@ -364,10 +364,22 @@
         function loadApp() {
             const container = document.getElementById('app-container');
             
+            // Determine the app URL based on environment
+            let appUrl;
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                // Local development
+                appUrl = 'http://localhost:3000';
+            } else {
+                // Production/Vercel deployment - use current domain
+                appUrl = window.location.origin;
+            }
+            
+            console.log('Loading app from:', appUrl);
+            
             // Try to load the iframe directly
             container.innerHTML = `
                 <iframe 
-                    src="http://localhost:3000" 
+                    src="${appUrl}" 
                     width="100%" 
                     height="800" 
                     frameborder="0"
@@ -396,14 +408,20 @@
 
         function showError() {
             const container = document.getElementById('app-container');
+            
+            // Determine the environment for better error messaging
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const appUrl = isLocal ? 'http://localhost:3000' : window.location.origin;
+            
             container.innerHTML = `
                 <div class="text-center py-12">
                     <i data-lucide="alert-circle" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
                     <h3 class="text-xl font-semibold mb-2">App Not Available</h3>
-                    <p class="text-gray-600 mb-4">The Commute Cost Calculator is not currently running on localhost:3000.</p>
+                    <p class="text-gray-600 mb-4">The Commute Cost Calculator is not currently running${isLocal ? ' on localhost:3000' : ' on this domain'}.</p>
                     <div class="bg-gray-100 p-6 rounded-lg text-left max-w-md mx-auto mb-6">
-                        <p class="text-sm font-semibold mb-3">To run the app:</p>
+                        <p class="text-sm font-semibold mb-3">${isLocal ? 'To run the app locally:' : 'To access the app:'}</p>
                         <ol class="text-sm text-gray-600 space-y-2">
+                            ${isLocal ? `
                             <li class="flex items-start">
                                 <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-mono mr-2 mt-0.5">1</span>
                                 Navigate to the project directory
@@ -420,6 +438,24 @@
                                 <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-mono mr-2 mt-0.5">4</span>
                                 Click "Try Again" below
                             </li>
+                            ` : `
+                            <li class="flex items-start">
+                                <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-mono mr-2 mt-0.5">1</span>
+                                The app may be temporarily unavailable
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-mono mr-2 mt-0.5">2</span>
+                                Check if the deployment is still active
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-mono mr-2 mt-0.5">3</span>
+                                Try refreshing the page
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-mono mr-2 mt-0.5">4</span>
+                                Click "Try Again" below
+                            </li>
+                            `}
                         </ol>
                     </div>
                     <div class="space-x-4">
@@ -542,6 +578,22 @@
                 </div>
             `;
         }
+
+        // Update loading message based on environment
+        function updateLoadingMessage() {
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) {
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                if (isLocal) {
+                    loadingMessage.textContent = 'If the app doesn\'t load, make sure the Next.js development server is running on localhost:3000';
+                } else {
+                    loadingMessage.textContent = 'Loading the deployed application...';
+                }
+            }
+        }
+
+        // Update loading message immediately
+        updateLoadingMessage();
 
         // Try to load the app after a short delay
         setTimeout(loadApp, 1000);

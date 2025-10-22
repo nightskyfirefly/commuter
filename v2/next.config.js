@@ -1,19 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // App Router is stable in Next.js 14, no experimental flag needed
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "frame-ancestors *", // Allow embedding from any origin (for showcase page)
-          },
-        ],
-      },
-    ];
-  },
+  // App Router is stable in Next.js 15, no experimental flag needed
+  // Removed CSP headers that might be causing redirect loops
+  
+  // Fix workspace root detection issue
+  outputFileTracingRoot: __dirname,
 }
 
 module.exports = nextConfig
