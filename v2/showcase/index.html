@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: https:; font-src 'self' data:;">
     <title>Commute Cost Calculator - Interactive Showcase</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -372,10 +371,20 @@
 
         // Detect GitHub Pages environment
         function isGitHubPages() {
-            return window.location.hostname.includes('github.io') || 
-                   window.location.hostname.includes('github.com') ||
-                   window.location.pathname.includes('/main/') ||
-                   window.location.pathname.includes('/v2/');
+            const hostname = window.location.hostname;
+            const pathname = window.location.pathname;
+            
+            // Check for GitHub Pages domains
+            if (hostname.includes('github.io') || hostname.includes('github.com')) {
+                return true;
+            }
+            
+            // Check for common GitHub Pages path patterns
+            if (pathname.includes('/main/') || pathname.includes('/v2/') || pathname.includes('/showcase/')) {
+                return true;
+            }
+            
+            return false;
         }
 
         // Load the app - show static demo on GitHub Pages, try iframe elsewhere
